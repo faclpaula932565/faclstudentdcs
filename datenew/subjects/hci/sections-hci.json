@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 2,
+  "subject": "hci",
+  "sections": [
+    {
+      "id": "hci-sec-01",
+      "subject": "hci",
+      "lecture": "المحاضرة 1: مقدمة في التفاعل بين الإنسان والحاسوب (HCI)",
+      "lectureId": "hci-lecture-01",
+      "instructorId": "INS-Radwa",
+      "instructorName": "م. رضوى صالح",
+      "groupName": "سكشن 1",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 1 - HCI Lab 1",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/hci/sections/Sec 1/HCI Lab 1_compressed.pdf",
+          "type": "pdf"
+        }
+      },
+      "links": [
+        {
+          "t": "تحميل ملف العمل بتاع السكشن",
+          "d": "",
+          "icon": "🇪🇬",
+          "actions": [
+            {
+              "label": "📥 تحميل",
+              "url": "https://drive.google.com/uc?export=download&id=1V0_dHvC4cA6B2xGZoaYyai-6OECjGSl3",
+              "type": "download",
+              "color": "red"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hci-sec-02",
+      "subject": "hci",
+      "lecture": "المحاضرة 2: الإنسان (The Human)",
+      "lectureId": "hci-lecture-02",
+      "instructorId": "INS-Radwa",
+      "instructorName": "م. رضوى صالح",
+      "groupName": "سكشن 2",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 2 - HCI Lab 2",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/hci/sections/Sec 2/HCI_lab2_compressed.pdf",
+          "type": "pdf"
+        }
+      },
+      "links": [
+        {
+          "t": "تحميل ملف العمل بتاع السكشن",
+          "d": "",
+          "icon": "🇪🇬",
+          "actions": [
+            {
+              "label": "📥 تحميل",
+              "url": "https://drive.google.com/uc?export=download&id=1gxjkGeHC_oxmzkvMKYsvLNYjr5X7tG30",
+              "type": "download",
+              "color": "red"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hci-sec-03",
+      "subject": "hci",
+      "lecture": "المحاضرة 3: الحاسوب (The Computer)",
+      "lectureId": "hci-lecture-03",
+      "instructorId": "INS-Radwa",
+      "instructorName": "م. رضوى صالح",
+      "groupName": "سكشن 3",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 3 - HCI Lab 3",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/hci/sections/Sec 3/HCI_lab3_compressed.pdf",
+          "type": "pdf"
+        },
+        "links": [
+          {
+            "t": "تحميل ملف العمل بتاع السكشن",
+            "d": "",
+            "icon": "🇪🇬",
+            "actions": [
+              {
+                "label": "📥 تحميل",
+                "url": "https://drive.google.com/uc?export=download&id=1wvysdFIYhETedKBcaALbwTQHHMnahFk8",
+                "type": "download",
+                "color": "red"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hci-sec-04",
+      "subject": "hci",
+      "lecture": "المحاضرة 3: الحاسوب (The Computer)",
+      "lectureId": "hci-lecture-03",
+      "instructorId": "INS-Radwa",
+      "instructorName": "م. رضوى صالح",
+      "groupName": "سكشن 4",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 4 - HCI Lab 4",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/hci/sections/Sec 4/HCI Lab 4_compressed.pdf",
+          "type": "pdf"
+        },
+        "links": [
+          {
+            "t": "تحميل ملف العمل بتاع السكشن",
+            "d": "",
+            "icon": "🇪🇬",
+            "actions": [
+              {
+                "label": "📥 تحميل",
+                "url": "datenew/subjects/hci/sections/Sec 4/HCI Lab 4.zip",
+                "type": "download",
+                "color": "red"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

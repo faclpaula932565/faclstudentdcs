@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "subject": "visual-programming",
+
+  "sections": [
+    {
+      "id": "visual-programming-sec-01",
+      "subject": "visual-programming",
+      "lectureId": "visual-programming-lec-01",
+      "lecture": "المحاضرة الأولى",
+
+      "instructorId": "isma-ismall",
+      "instructorName": "م. اسماء اسماعيل ",
+      "status": "available",
+
+      "sectionTitle": "🧩 سكاشن  مقدمة في Windos Form",
+
+      "notes": "السكشن حل فقط مفيش شرح .",
+
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/visual-programming/sections/section01/GUI.pdf",
+          "type": "pdf"
+        }
+      }
+    },
+    {
+      "id": "visual-programming-sec-02",
+      "subject": "visual-programming",
+      "lectureId": "visual-programming-lec-01",
+      "lecture": "المحاضرة الأولى",
+
+      "instructorId": "isma-ismall",
+      "instructorName": "م. اسماء اسماعيل ",
+      "status": "available",
+
+      "sectionTitle": "🧩 سكاشن  picterv box ,buttom",
+
+      "notes": "السكشن حل فقط مفيش شرح .",
+
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/visual-programming/sections/section02/Sheat2.pdf",
+          "type": "pdf"
+        }
+      }
+    }
+  ]
+}

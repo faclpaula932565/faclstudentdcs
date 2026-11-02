@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "subject": "algorithms",
+  "sections": [
+    {
+      "id": "algorithms-sec-01",
+      "subject": "algorithms",
+      "lecture": "المحاضرة 1 — مقدمة في تحليل الخوارزميات ومفاهيم التعقيد",
+      "lectureId": "algorithms-lecture-01",
+      "instructorId": "INS-Abdullah",
+      "instructorName": "م. عبدالله احمد  ",
+      "groupName": "سكشن 1",
+      "status": "available",
+      "sectionTitle": "🖼️ سكاشن  algorithms ",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/algorithms/Sections/Section 1/1- Asymptotic Notations.pdf",
+          "type": "pdf"
+        }
+      }
+    },
+    {
+      "id": "algorithms-sec-02",
+      "subject": "algorithms",
+      "lecture": "المحاضرة 2 — الترميزات المقاربة وخوارزميات الترتيب والبحث",
+      "lectureId": "algorithms-lecture-02",
+      "instructorId": "INS-Abdullah",
+      "instructorName": "م. عبدالله احمد  ",
+      "groupName": "سكشن 2",
+      "status": "available",
+      "sectionTitle": "🖼️ سكاشن  algorithms ",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/algorithms/Sections/Section 2/3- Analysis of Recursive Algorithms.pdf",
+          "type": "pdf"
+        }
+      }
+    },
+    {
+      "id": "algorithms-sec-03",
+      "subject": "algorithms",
+      "lecture": "المحاضرة 3 — استراتيجية Divide and Conquer ومبرهنة الماستر",
+      "lectureId": "algorithms-lecture-03",
+      "instructorId": "INS-Abdullah",
+      "instructorName": "م. عبدالله احمد  ",
+      "groupName": "سكشن 3",
+      "status": "available",
+      "sectionTitle": "🖼️ سكاشن  algorithms ",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/algorithms/Sections/Section 3/Recurrence Practice Worksheet.pdf",
+          "type": "pdf"
+        }
+      }
+    }
+  ]
+}

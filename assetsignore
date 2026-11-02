@@ -1,0 +1,18 @@
+# لو المشروع بيتنشر كـ Worker مع Static Assets: الملفات دي مش هتتنشر كملفات عامة
+functions
+node_modules
+.git
+.wrangler
+.github
+wrangler.jsonc
+wrangler.json
+wrangler.toml
+package.json
+package-lock.json
+build-version.cjs
+vercel.json
+schedule_year3.csv
+webhook.js
+.env
+.gitignore
+.assetsignore

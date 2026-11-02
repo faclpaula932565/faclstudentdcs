@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "subject": "computer-networks",
+  "sections": [
+    {
+      "id": "networks-sec-01",
+      "subject": "computer-networks",
+      "lectureId": "networks-lecture-02",
+      "lecture": "المحاضرة الثانية",
+      "instructorId": "inst-mohamed",
+      "instructorName": "م. سحر خير",
+      "groupName": "سكشن A",
+      "status": "available",
+      "sectionTitle": "🧩 سكشن الشبكات",
+      "notes": "الاسبوع الجاي كويز علي شيت واحد",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/computer-networks/sections/section1/Sheet 1 Answers.pdf",
+          "type": "pdf"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "subject": "machine-learning",
+  "sections": [
+    {
+      "id": "machine-learning-sec-01",
+      "subject": "machine-learning",
+      "lecture": "المحاضرة 1: مقدمة في تعلم الآلة (Introduction to Machine Learning)",
+      "lectureId": "machine-learning-lecture-01",
+      "instructorId": "INS-Maria",
+      "instructorName": "م. ماريا ايمن",
+      "groupName": "سكشن 1",
+      "status": "available",
+      "sectionTitle": "🤖 لاب 1 - Introduction to ML",
+      "materials": {
+        "file": {
+          "label": "ملف المحاضرة",
+          "url": "datenew/subjects/machine-learning/sections/Sec 1/Introduction to Machine learning_compressed (1).pdf",
+          "type": "pdf"
+        }
+      }
+    },
+    {
+      "id": "machine-learning-sec-02",
+      "subject": "machine-learning",
+      "lecture": "المحاضرة 2: KNN vs K-Means",
+      "lectureId": "machine-learning-lecture-02",
+      "instructorId": "INS-Maria",
+      "instructorName": "م. ماريا ايمن",
+      "groupName": "سكشن 2",
+      "status": "available",
+      "sectionTitle": "📊 لاب 2 - KNN vs K-Means",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/machine-learning/sections/Sec 2/KNN vs K-Means_compressed.pdf",
+          "type": "pdf"
+        }
+      },
+      "linkCategories": [
+        {
+          "category": " ملف السكشن",
+
+          "links": [
+            {
+              "t": "تحميل ملف العمل بتاع السكشن",
+              "d": "",
+              "icon": "🇪🇬",
+              "actions": [
+                {
+                  "label": "📥 تحميل",
+                  "url": "https://drive.google.com/uc?export=download&id=10Tr75nd6h0WtyeH-5lODp2RBMz6Itk1v",
+                  "type": "download",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "machine-learning-sec-03",
+      "subject": "machine-learning",
+      "lecture": "المحاضرة 3: الانحدار الخطي (Linear Regression)",
+      "lectureId": "machine-learning-lecture-03",
+      "instructorId": "INS-Maria",
+      "instructorName": "م. ماريا ايمن",
+      "groupName": "سكشن 3",
+      "status": "available",
+      "sectionTitle": "📊 سكشن 3",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/machine-learning/sections/sec3/Linear_Regression_Logistic_Regression_compressed.pdf",
+          "type": "pdf"
+        }
+      },
+      "linkCategories": [
+        {
+          "category": " ملف السكشن",
+
+          "links": [
+            {
+              "t": "تحميل ملف العمل بتاع السكشن",
+              "d": "",
+              "icon": "🇪🇬",
+              "actions": [
+                {
+                  "label": "📥 تحميل",
+                  "url": "",
+                  "type": "download",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "machine-learning-sec-04",
+      "subject": "machine-learning",
+      "lecture": "المحاضرة 4: أشجار القرار (Decision Trees)",
+      "lectureId": "machine-learning-lecture-04",
+      "instructorId": "INS-Maria",
+      "instructorName": "م. ماريا ايمن",
+      "groupName": "سكشن 4",
+      "status": "available",
+      "sectionTitle": "🌳 لاب 4 - Decision Trees",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن",
+          "url": "datenew/subjects/machine-learning/sections/Sec 4/Decision Tree.pdf",
+          "type": "pdf"
+        }
+      },
+      "linkCategories": [
+        {
+          "category": " ملف السكشن",
+          "links": [
+            {
+              "t": "تحميل ملف العمل بتاع السكشن",
+              "d": "",
+              "icon": "🇪🇬",
+              "actions": [
+                {
+                  "label": "📥 تحميل",
+                  "url": "https://drive.google.com/uc?export=download&id=1YI_z5Qmc3IOWLGBO_uyn6TnjbTq97pLE",
+                  "type": "download",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

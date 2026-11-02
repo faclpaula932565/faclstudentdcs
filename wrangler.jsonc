@@ -1,0 +1,13 @@
+{
+  "name": "third-year-platform",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "."
+  },
+  "functions_directory": "functions",
+  "build": {
+    "upload": {
+      "format": "modules"
+    }
+  }
+}

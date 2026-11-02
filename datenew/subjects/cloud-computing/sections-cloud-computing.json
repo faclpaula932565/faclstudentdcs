@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "subject": "cloud-computing",
+  "sections": [
+    {
+      "id": "cloud-computing-sec-01",
+      "subject": "cloud-computing",
+      "lecture": "المحاضرة 2: أساسيات الشبكات (Network Fundamentals)",
+      "lectureId": "cloud-orientation-lec-02",
+      "instructorId": "INS-Ahamd",
+      "instructorName": "م. امير",
+      "groupName": "سكشن 1",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 1 - Computer Networks",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "/datenew/subjects/cloud-computing/sections/Lab-1-CN__1_.pdf",
+          "type": "pdf"
+        },
+
+        "solution": "datenew/subjects/cloud-computing/sections/Lab1_Computer_Network_Solution.pdf"
+      }
+    },
+    {
+      "id": "cloud-computing-sec-0",
+      "subject": "cloud-computing",
+      "lecture": "المحاضرة 3 و4 — Virtualization (المحاكاة الافتراضية)",
+      "lectureId": "cloud-computing-lec-3-4",
+      "instructorId": "INS-Ahamd",
+      "instructorName": "م. امير",
+      "groupName": "سكشن 2",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 2 - Computer Virtualization، Type 2",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/cloud-computing/sections/Lab2- Virtualization type2_compressed.pdf",
+          "type": "pdf"
+        },
+
+        "solution": "/datenew/subjects/cloud-computing/sections/Lab2-Questions-Solutions.pdf"
+      }
+    },
+    {
+      "id": "cloud-computing-sec-03",
+      "subject": "cloud-computing",
+      "lecture": "المحاضرة 3 و4 — Virtualization (المحاكاة الافتراضية)",
+      "lectureId": "cloud-computing-lec-3-4",
+      "instructorId": "INS-Ahamd",
+      "instructorName": "م. امير",
+      "groupName": "سكشن 3",
+      "status": "available",
+      "sectionTitle": "🌐 لاب 3 - Computer Virtualization، Type 1",
+      "materials": {
+        "file": {
+          "label": "ملف اللاب",
+          "url": "datenew/subjects/cloud-computing/sections/Lab3- Implement RDP_compressed.pdf",
+          "type": "pdf"
+        },
+
+        "solution": "datenew/subjects/cloud-computing/sections/Lab3-Questions-Solutions.pdf"
+      }
+    }
+  ]
+}

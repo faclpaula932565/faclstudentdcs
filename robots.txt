@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fcal-third-year.vercel.app/sitemap.xml

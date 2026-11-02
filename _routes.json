@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/functions/*",
+    "/node_modules/*",
+    "/.git/*",
+    "/.wrangler/*",
+    "/.github/*",
+    "/wrangler.jsonc",
+    "/wrangler.json",
+    "/wrangler.toml",
+    "/package.json",
+    "/package-lock.json",
+    "/build-version.cjs",
+    "/vercel.json",
+    "/schedule_year3.csv",
+    "/.env",
+    "/.gitignore",
+    "/.assetsignore"
+  ],
+  "exclude": []
+}

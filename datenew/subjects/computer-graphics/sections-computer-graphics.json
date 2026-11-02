@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 2,
+  "subject": "computer-graphics",
+  "sections": [
+    {
+      "id": "computer-graphics-sec-01",
+      "subject": "computer-graphics",
+      "lecture": "المحاضرة 1: مقدمة الرسوميات، الإسقاط المنظوري، والـ Rasterization",
+      "lectureId": "computer-graphics-lec-01",
+      "instructorId": "INS-Ahamd",
+      "instructorName": "م. احمد هشام ",
+      "groupName": "سكشن A",
+      "status": "available",
+      "sectionTitle": "🖼️ سكاشن رسم بالحاسب  ",
+
+      "links": [
+        {
+          "t": "ملف السكشن",
+          "d": "دي ملف اول سكشن ال كان علي openGL ,تم التحويل الي webGL",
+          "icon": "🇪🇬",
+          "actions": [
+            {
+              "label": "📥 تحميل",
+              "url": "https://drive.google.com/uc?export=download&id=1yBSWsqATJVX5oblzDwJnD7FD40k9zz6i",
+              "type": "download",
+              "color": "red"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "computer-graphics-sec-02",
+      "subject": "computer-graphics",
+      "lecture": "المحاضرة 1: مقدمة الرسوميات، الإسقاط المنظوري، والـ Rasterization",
+      "lectureId": "computer-graphics-lec-01",
+      "instructorId": "INS-Ahamd",
+      "instructorName": "م. احمد هشام ",
+      "groupName": "سكشن  B",
+      "status": "available",
+      "sectionTitle": "🖼️ سكاشن رسم بالحاسب  ",
+
+      "linkCategories": [
+        {
+          "category": "ملفات السكشن",
+          "icon": "📄",
+          "description": "ملف السكشن الرسمي للتحميل والمذاكرة",
+          "links": [
+            {
+              "t": "ملف السكشن",
+              "d": "",
+              "icon": "🇪🇬",
+              "actions": [
+                {
+                  "label": "📥 تحميل",
+                  "url": "https://drive.google.com/uc?export=download&id=1ykh2AK6WuY9cJhpNExpBxRxv86CdPcJO",
+                  "type": "download",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "category": "فيديوهات عربية",
+          "icon": "🇪🇬",
+          "description": "محاضرات ودورات عربية بالفيديو لتعلم الرسم بالحاسب باستخدام WebGL من الصفر حتى الـ Vertex و Fragment Shaders",
+          "links": [
+            {
+              "t": "مادة الرسم بالحاسب باستخدام WebGL - قائمة التشغيل الكاملة (د. أسامة حسام الدين)",
+              "d": "قائمة تشغيل عربية كاملة من 6 محاضرات تشرح الرسم بالحاسب باستخدام WebGL من أساسيات HTML/CSS/JS حتى الـ Shaders والمكعبات ثلاثية الأبعاد",
+              "icon": "🇪🇬",
+              "actions": [
+                {
+                  "label": "▶️ فتح قائمة التشغيل",
+                  "url": "https://youtube.com/playlist?list=PLXtOe7VV9qsLHyy-WG1AcOEvD7dh8ozPm",
+                  "type": "view",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "category": "فيديوهات عالمية",
+          "icon": "🌍",
+          "description": "سلاسل تعليمية عالمية متخصصة تشرح WebGL الخام وبناء المحركات من الصفر بـ JavaScript و GLSL فقط",
+          "links": [
+            {
+              "t": "Indigo Code - Pure WebGL Tutorial Series",
+              "d": "سلسلة تشرح WebGL الخام من الصفر: إنشاء المصدات (Buffers)، المظللات، والمصفوفات بـ JS و GLSL فقط",
+              "icon": "🌍",
+              "actions": [
+                {
+                  "label": "▶️ مشاهدة السلسلة",
+                  "url": "https://www.youtube.com/watch?v=7VN4QqOtvt0",
+                  "type": "view",
+                  "color": "red"
+                }
+              ]
+            },
+            {
+              "t": "Invent Box - WebGL Pipeline in a Nutshell",
+              "d": "شرح مكثف لخط أنابيب العرض المباشر والربط بين Vertex Shader و Fragment Shader بـ JavaScript",
+              "icon": "🌍",
+              "actions": [
+                {
+                  "label": "▶️ مشاهدة الشرح",
+                  "url": "https://www.youtube.com/watch?v=bP7_FeP9kU4",
+                  "type": "view",
+                  "color": "red"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "category": "مواقع ومراجع",
+          "icon": "📚",
+          "description": "المراجع والوثائق القياسية عربياً وعالمياً لتعلم WebGL 2.0 ولغة GLSL دون أي مكتبات خارجية",
+          "links": [
+            {
+              "t": "توثيق WebGL API المباشر - MDN بالعربي",
+              "d": "الدليل الرسمي المترجم للعربية من موزيلا لشرح سياق WebGL، المصدات (Buffers)، والمظللات (Shaders) بـ JavaScript",
+              "icon": "📚",
+              "actions": [
+                {
+                  "label": "🚀 فتح التوثيق العربي",
+                  "url": "https://developer.mozilla.org/ar/docs/Web/API/WebGL_API",
+                  "type": "view",
+                  "color": "green"
+                }
+              ]
+            },
+            {
+              "t": "دليل البدء مع WebGL - MDN بالعربي",
+              "d": "شرح خطوة بخطوة لإنشاء عنصر Canvas وتهيئة سياق webgl2 المباشر ورسم الأشكال الأساسية",
+              "icon": "📚",
+              "actions": [
+                {
+                  "label": "📖 الشرح العربي",
+                  "url": "https://developer.mozilla.org/ar/docs/Web/API/WebGL_API/Tutorial/Getting_started_with_WebGL",
+                  "type": "view",
+                  "color": "blue"
+                }
+              ]
+            },
+            {
+              "t": "WebGL2 Fundamentals",
+              "d": "المرجع القياسي الأول عالمياً لتعلم WebGL2 الخام من الصفر، يغطي المصدات والمظللات ومصفوفات MVP",
+              "icon": "📚",
+              "actions": [
+                {
+                  "label": "🚀 فتح الموقع",
+                  "url": "https://webglfundamentals.org/",
+                  "type": "view",
+                  "color": "green"
+                }
+              ]
+            },
+            {
+              "t": "MDN WebGL API Reference (English)",
+              "d": "التوثيق الشامل لجميع دوال وتصريحات WebGL المباشرة مثل createBuffer و compileShader و drawArrays",
+              "icon": "📚",
+              "actions": [
+                {
+                  "label": "🚀 فتح التوثيق",
+                  "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API",
+                  "type": "view",
+                  "color": "blue"
+                }
+              ]
+            },
+            {
+              "t": "The Book of Shaders",
+              "d": "دليل تفاعلي تدريجي لتعلم كتابة مظللات القطع (Fragment Shaders) ولغة GLSL المباشرة",
+              "icon": "📚",
+              "actions": [
+                {
+                  "label": "🚀 فتح الكتاب",
+                  "url": "https://thebookofshaders.com/",
+                  "type": "view",
+                  "color": "blue"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "category": "أدوات ومحاكاة",
+          "icon": "🔧",
+          "description": "بيئات اختبار شفرات GLSL وفحص حدود كرت الشاشة وسياق WebGL",
+          "links": [
+            {
+              "t": "Shadertoy - Interactive GLSL Shaders",
+              "d": "منصة عالمية لكتابة واختبار مظللات GLSL المباشرة والتفاعل مع البكسلات",
+              "icon": "🔧",
+              "actions": [
+                {
+                  "label": "🚀 فتح المنصة",
+                  "url": "https://www.shadertoy.com/",
+                  "type": "view",
+                  "color": "orange"
+                }
+              ]
+            },
+            {
+              "t": "GLSL Sandbox",
+              "d": "محرر تفاعلي خفيف لاختبار شفرات GLSL المباشرة والتفاعل مع الإحداثيات والوقت",
+              "icon": "🔧",
+              "actions": [
+                {
+                  "label": "🌐 فتح المحرر",
+                  "url": "https://glslsandbox.com/",
+                  "type": "view",
+                  "color": "blue"
+                }
+              ]
+            },
+            {
+              "t": "WebGL Report",
+              "d": "أداة تفصيلية لفحص قدرات WebGL المتاحة في المتصفح ومعرفة حدود المعالج الرسومي (GPU)",
+              "icon": "🔧",
+              "actions": [
+                {
+                  "label": "🌐 فتح التقرير",
+                  "url": "https://webglreport.com/",
+                  "type": "view",
+                  "color": "blue"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

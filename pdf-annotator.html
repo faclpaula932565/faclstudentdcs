@@ -1,0 +1,3346 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>قلم PDF — علّم على ملفاتك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- SRI-TODO -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#1B2430; --ink-2:#252F3E; --paper:#E9E5DC; --paper-page:#FFFFFF;
+    --text-light:#F4F1EA; --muted:#9AA3B2; --accent:#E8793C; --accent-dim:#C9632E;
+    --line:#3A4456; --danger:#D1495B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--paper);font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--ink);overflow:hidden;}
+  .mono{font-family:'JetBrains Mono',monospace;letter-spacing:.02em;}
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  #topbar{background:var(--ink);color:var(--text-light);display:flex;align-items:center;gap:8px;padding:5px 12px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:30;flex-shrink:0;}
+  #topbar::-webkit-scrollbar{display:none;}
+
+  /* ===== مؤشر تمرير الشريط العلوي ===== */
+  #topbarWrap{position:relative;flex-shrink:0;z-index:30;}
+  #topbarWrap #topbar{box-shadow:none;}
+  #topbarScroll{display:none;position:relative;height:5px;background:rgba(255,255,255,.08);box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  #topbarScroll.show{display:block;}
+  #topbarScrollThumb{position:absolute;top:0;bottom:0;right:0;width:40%;background:var(--accent);border-radius:5px;opacity:.9;transition:opacity .2s;}
+  #topbarScroll.hint #topbarScrollThumb{animation:tbHint 1.1s ease-in-out 2;}
+  @keyframes tbHint{0%,100%{opacity:.9}50%{opacity:.35}}
+  .tbFade{display:none;position:absolute;top:0;bottom:5px;width:26px;pointer-events:none;z-index:2;transition:opacity .2s;}
+  .tbFade.l{left:0;background:linear-gradient(to right,var(--ink),transparent);}
+  .tbFade.r{right:0;background:linear-gradient(to left,var(--ink),transparent);}
+  #topbarWrap.has-scroll .tbFade{display:block;}
+  .brand{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(232,121,60,.25);}
+  .brand b{font-size:15px;white-space:nowrap;}
+  .brand span{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+  .sep{width:1px;height:24px;background:var(--line);margin:0 2px;flex-shrink:0;}
+  button.tbtn{background:transparent;border:1px solid transparent;color:var(--text-light);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:5px;transition:background .15s, border-color .15s;font-family:inherit;flex-shrink:0;white-space:nowrap;}
+  button.tbtn:hover{background:var(--ink-2);}
+  button.tbtn.active{background:rgba(232,121,60,.16);border-color:var(--accent);color:#fff;}
+  button.tbtn svg{width:16px;height:16px;flex:none;}
+  .kbd{font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:4px;padding:1px 5px;color:var(--muted);line-height:1.4;flex:none;}
+  .primary{background:var(--accent)!important;color:#fff!important;font-weight:600;}
+  .primary:hover{background:var(--accent-dim)!important;}
+  #zoomLabel{cursor:pointer;user-select:none;flex-shrink:0;}
+  #pageIndicator{display:none;align-items:center;gap:6px;background:var(--ink-2);padding:4px 12px;border-radius:10px;font-family:'JetBrains Mono',monospace;cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0;}
+  #pageIndicator.show{display:flex;}
+  #pageIndicator:hover{background:var(--accent);}
+  #pageIndicator .pg-num{font-size:18px;font-weight:700;color:var(--accent);line-height:1;direction:ltr;}
+  #pageIndicator:hover .pg-num{color:#fff;}
+  #pageIndicator .pg-total{font-size:11px;color:var(--muted);line-height:1;}
+  #pageIndicator .pg-label{font-size:10px;color:var(--muted);display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;}
+
+  #toolbar{display:none;flex-direction:column;background:var(--ink-2);color:var(--text-light);padding:6px 12px;z-index:29;box-shadow:0 1px 4px rgba(0,0,0,.2);border-bottom:1px solid var(--line);flex-shrink:0;overflow:hidden;}
+  #toolbar.show{display:flex;}
+  #toolbarRow{display:flex;align-items:center;justify-content:flex-start;gap:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:rgba(232,121,60,.5) transparent;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  #toolbarRow::-webkit-scrollbar{height:6px;}
+  #toolbarRow::-webkit-scrollbar-thumb{background:rgba(232,121,60,.45);border-radius:6px;}
+  #toolbarRow::-webkit-scrollbar-thumb:hover{background:rgba(232,121,60,.75);}
+  #toolbarRow::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:6px;}
+
+  .tool-btn{background:transparent;border:1px solid transparent;color:var(--text-light);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit;flex-shrink:0;white-space:nowrap;}
+  .tool-btn:hover{background:var(--ink);}
+  .tool-btn.active{background:rgba(232,121,60,.2);border-color:var(--accent);color:#fff;box-shadow:0 0 0 1px rgba(232,121,60,.3);}
+  .tool-btn svg{width:18px;height:18px;flex:none;}
+  .t-sep{width:1px;height:24px;background:var(--line);margin:0 2px;flex-shrink:0;}
+
+  .pen-rack{display:flex;align-items:center;gap:6px;background:var(--ink);padding:4px 6px;border-radius:10px;flex-shrink:0;}
+  .pen{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.15);display:inline-block;position:relative;flex:none;transition:transform .12s;}
+  .pen:hover{transform:translateY(-2px);}
+  .pen.selected{border-color:#fff;box-shadow:0 0 0 2px var(--ink-2),0 0 0 3px var(--accent);}
+
+  .color-picker-btn{width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;position:relative;flex:none;padding:0;overflow:hidden;transition:transform .12s;background:transparent;}
+  .color-picker-btn:hover{transform:scale(1.08);border-color:var(--accent);}
+  .color-picker-btn input[type="color"]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;}
+  .color-picker-btn .c-swatch{position:absolute;inset:2px;border-radius:5px;background:currentColor;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);}
+  .color-picker-btn .c-icon{position:relative;z-index:2;color:#fff;font-size:12px;font-weight:bold;pointer-events:none;text-shadow:0 0 3px rgba(0,0,0,.8);}
+
+  .tb-label{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;}
+  input[type=range].tb-range{width:65px;accent-color:var(--accent);flex-shrink:0;}
+  .tb-btn{background:transparent;border:1px solid transparent;color:var(--text-light);padding:6px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .15s;font-family:inherit;flex-shrink:0;}
+  .tb-btn:hover{background:var(--ink);}
+  .tb-btn svg{width:16px;height:16px;flex:none;}
+
+  #main{flex:1;position:relative;overflow:auto;background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0) 0 0/16px 16px, var(--paper);touch-action:pan-x pan-y;user-select:none;-webkit-user-select:none;direction:ltr;scrollbar-width:none;-ms-overflow-style:none;}
+  #emptyState{direction:rtl;}
+  #main.grab{cursor:grab;}
+  #main::-webkit-scrollbar{display:none;width:0;height:0;}
+  #main.grabbing{cursor:grabbing!important;}
+  #viewer{direction:ltr;display:flex;flex-direction:column;align-items:flex-start;gap:26px;padding:30px 30px 60px 30px;min-height:100%;}
+  .page-wrap{position:relative;box-shadow:0 6px 24px rgba(20,20,30,.22), 0 1px 3px rgba(0,0,0,.15);background:var(--paper-page);margin:0 auto;}
+  .page-wrap canvas{display:block;position:absolute;top:0;left:0;}
+  .pdf-canvas{position:relative!important;}
+  .ink-canvas{touch-action:none;cursor:crosshair;}
+  .page-num{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B8273;}
+  .page-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9A9282;font-family:'JetBrains Mono',monospace;font-size:12px;background:linear-gradient(135deg, rgba(0,0,0,.025) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.025) 50%, rgba(0,0,0,.025) 75%, transparent 75%) 0 0/26px 26px,#FCFAF4;}
+
+  .textLayer{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;line-height:1;text-size-adjust:none;-webkit-text-size-adjust:none;forced-color-adjust:none;transform-origin:0 0;z-index:3;pointer-events:none;}
+  .textLayer > span, .textLayer > br{color:transparent !important;position:absolute;white-space:pre;cursor:text;transform-origin:0% 0%;pointer-events:auto;user-select:text;-webkit-user-select:text;}
+  .textLayer.selectable{pointer-events:auto;}
+  .textLayer.selectable > span, .textLayer.selectable > br{pointer-events:auto !important;}
+  body.tool-draw .textLayer,
+  body.tool-draw .textLayer > span,
+  body.tool-draw .textLayer > br{pointer-events:none !important;}
+  .textLayer ::selection{background:rgba(47,111,237,.35);}
+  .textLayer ::-moz-selection{background:rgba(47,111,237,.35);}
+
+  #navBar{display:none;position:fixed;right:10px;top:104px;bottom:14px;width:20px;z-index:50;cursor:grab;touch-action:none;}
+  #navBar.show{display:block;}
+  #navBar:active,#navBar.dragging{cursor:grabbing;}
+  #navBar::before{content:'';position:absolute;left:50%;top:2px;bottom:2px;width:4px;transform:translateX(-50%);background:rgba(27,36,48,.16);border-radius:4px;transition:background .15s, width .15s;}
+  #navBar:hover::before,#navBar.dragging::before{background:rgba(27,36,48,.32);width:5px;}
+  .nav-cap{position:absolute;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:rgba(27,36,48,.35);pointer-events:none;transition:background .15s;}
+  .nav-cap-top{top:-3px;}
+  .nav-cap-bottom{bottom:-3px;}
+  #navBar:hover .nav-cap,#navBar.dragging .nav-cap{background:var(--accent);}
+  #navThumb{position:absolute;left:50%;transform:translateX(-50%);width:13px;min-height:32px;background:var(--ink);border-radius:8px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35);transition:background .15s, width .15s;z-index:1;}
+  #navBar:hover #navThumb,#navBar.dragging #navThumb{background:var(--accent);width:16px;}
+  #navTooltip{position:absolute;right:34px;top:50%;transform:translateY(-50%);background:var(--ink);color:#fff;white-space:nowrap;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:bold;pointer-events:none;opacity:0;transition:opacity .15s;box-shadow:0 4px 12px rgba(0,0,0,.3);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  #navBar:hover #navTooltip,#navBar.dragging #navTooltip{opacity:1;}
+
+  #pdfCtxMenu{position:fixed;display:none;z-index:300;background:#2B2B2B;color:#E8E8E8;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:6px;min-width:240px;direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;border:1px solid rgba(255,255,255,.08);user-select:none;-webkit-user-select:none;}
+  #pdfCtxMenu.show{display:block;}
+  .ctx-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;font-size:14px;transition:background .1s;white-space:nowrap;position:relative;}
+  .ctx-item:hover{background:rgba(255,255,255,.09);}
+  .ctx-item .ctx-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:none;}
+  .ctx-item .ctx-shortcut{margin-inline-start:auto;color:#9AA3B2;font-size:11px;font-family:'JetBrains Mono',monospace;}
+  .ctx-item .ctx-check{margin-inline-start:auto;color:#4A9EFF;font-weight:bold;font-size:15px;display:none;line-height:1;}
+  .ctx-item.active-markup .ctx-check{display:inline;}
+  .ctx-item .ctx-arrow{margin-inline-start:auto;color:#9AA3B2;font-size:12px;}
+  .ctx-item .ctx-aimenu{display:none;position:absolute;top:0;inset-inline-end:100%;margin-inline-end:2px;background:#2B2B2B;border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);padding:6px;min-width:250px;z-index:10;}
+  .ctx-item .ctx-aimenu::before{content:'';position:absolute;top:0;bottom:0;inset-inline-start:100%;width:8px;}
+  .ctx-item:hover > .ctx-aimenu{display:block;}
+  .ctx-has-ai.open > .ctx-aimenu{display:block;}
+  .ctx-has-ai.open > .ctx-arrow{transform:rotate(-90deg);}
+  @media all{
+    #pdfCtxMenu{max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
+    .ctx-has-ai, .ctx-has-submenu{flex-wrap:wrap;}
+    .ctx-item .ctx-aimenu{position:static;flex:0 0 100%;width:100%;margin:6px 0 0;min-width:0;box-shadow:none;background:rgba(255,255,255,.06);padding:4px;}
+    .ctx-item .ctx-aimenu::before{display:none;}
+    .ctx-item:hover > .ctx-aimenu{display:none;}
+    .ctx-has-ai.open > .ctx-aimenu{display:block;}
+    .ai-tag{font-size:10px;padding-inline-start:8px;}
+  }
+  .ai-tag{margin-inline-start:auto;padding-inline-start:14px;font-size:11px;color:#9AA3B2;}
+  .ai-tag.auto{color:#7BD88F;}
+  .ai-dot{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:none;font-family:'JetBrains Mono',monospace;}
+  .ctx-sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px;}
+  .ctx-has-submenu{position:relative;}
+  .ctx-item .ctx-swatches{display:none;position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:100%;margin-inline-end:8px;background:#2B2B2B;border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);padding:10px;gap:8px;flex-wrap:wrap;width:150px;justify-content:center;z-index:10;}
+  .ctx-item:hover .ctx-swatches{display:flex;}
+  .ctx-item .ctx-swatches::after{content:'';position:absolute;top:50%;inset-inline-start:100%;transform:translateY(-50%);width:0;height:0;border:6px solid transparent;border-inline-start-color:#2B2B2B;}
+  .ctx-swatches .sw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.2);transition:transform .1s;position:relative;}
+  .ctx-swatches .sw:hover{transform:scale(1.18);}
+  .ctx-swatches .sw.selected{border-color:#fff;box-shadow:0 0 0 2px rgba(232,121,60,.6);}
+  .ctx-swatches .sw.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#000;font-weight:bold;font-size:13px;}
+  .ctx-swatches .sw-sep{flex-basis:100%;height:1px;background:rgba(255,255,255,.12);margin:2px 0;}
+  .ctx-swatches .mk-btn{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#E8E8E8;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;}
+  .ctx-swatches .mk-btn:hover{background:rgba(232,121,60,.22);border-color:var(--accent);color:#fff;}
+  .ctx-swatches .mk-btn svg{width:16px;height:16px;}
+  /* القوائم الفرعية تفتح بالضغط داخل القائمة (بدون ماوس) */
+  #pdfCtxMenu .ctx-item .ctx-swatches{position:static;transform:none;flex:0 0 100%;width:100%;margin:6px 0 0;box-shadow:none;background:rgba(255,255,255,.06);padding:8px;display:none;}
+  #pdfCtxMenu .ctx-item .ctx-swatches::after{display:none;}
+  #pdfCtxMenu .ctx-item:hover > .ctx-swatches{display:none;}
+  #pdfCtxMenu .ctx-has-submenu.open > .ctx-swatches{display:flex;}
+  #pdfCtxMenu .ctx-item:hover > .ctx-aimenu{display:none;}
+  #pdfCtxMenu .ctx-has-ai.open > .ctx-aimenu{display:block;}
+
+  #emptyState{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px;text-align:center;}
+  #dropZone{width:min(520px,86vw);padding:46px 28px;border:2px dashed #B9AF9C;border-radius:16px;background:#F5F2EA;cursor:pointer;transition:border-color .15s,background .15s;}
+  #dropZone:hover,#dropZone.drag{border-color:var(--accent);background:#FBEFE4;}
+  #dropZone svg{width:46px;height:46px;color:var(--accent-dim);margin-bottom:10px;}
+  #dropZone h2{margin:6px 0 4px;font-size:17px;}
+  #dropZone p{margin:0;color:#7A7263;font-size:13px;}
+  #recentBox{width:min(520px,86vw);}
+  #recentBox h3{font-size:12px;color:#8B8273;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px;text-align:right;}
+  .recent-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E3DDCD;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s, transform .1s;}
+  .recent-item:hover{border-color:var(--accent);transform:translateX(-2px);}
+  .recent-item .ric{width:30px;height:30px;border-radius:8px;background:var(--ink);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none;font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .recent-item .ri-meta{flex:1;min-width:0;text-align:right;}
+  .recent-item .ri-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .recent-item .ri-sub{font-size:11px;color:#9A9282;font-family:'JetBrains Mono',monospace;}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;z-index:400;box-shadow:0 6px 20px rgba(0,0,0,.3);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #loadingOverlay{position:fixed;inset:0;background:rgba(27,36,48,.92);display:none;align-items:center;justify-content:center;z-index:90;color:#fff;flex-direction:column;gap:14px;}
+  #loadingOverlay.show{display:flex;}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:var(--accent);animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #helpOverlay{display:none;position:fixed;inset:0;background:rgba(27,36,48,.9);z-index:200;align-items:center;justify-content:center;cursor:pointer;}
+  #helpOverlay.show{display:flex;}
+  #helpPanel{background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:22px 26px;max-width:460px;width:90%;color:var(--text-light);cursor:default;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:85vh;overflow-y:auto;}
+  #helpPanel h3{margin:0 0 16px;font-size:17px;display:flex;justify-content:space-between;align-items:center;}
+  #helpPanel h3 button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;font-family:inherit;}
+  .hk-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;}
+  .hk-row:last-child{border-bottom:none;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#cfc8b8;border-radius:6px;}
+  #waitingForParent{display:none;position:fixed;inset:0;background:rgba(27,36,48,.85);z-index:80;align-items:center;justify-content:center;color:#fff;flex-direction:column;gap:16px;text-align:center;padding:20px;}
+  #waitingForParent.show{display:flex;}
+
+  #textInputBox{position:fixed;display:none;z-index:150;background:#fff;border:2px solid var(--accent);border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.35);min-width:280px;direction:rtl;}
+  #textInputBox.editing{border-color:#4A9EFF;box-shadow:0 0 0 4px rgba(74,158,255,.2), 0 10px 40px rgba(0,0,0,.35);}
+  #textInputBox .ti-badge{display:none;background:#4A9EFF;color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:0 6px 0 6px;position:absolute;top:-2px;right:-2px;font-family:inherit;}
+  #textInputBox.editing .ti-badge{display:inline-block;}
+  #textInputBox textarea{display:block;width:100%;min-height:70px;min-width:280px;border:none;outline:none;resize:both;padding:10px;font-family:'IBM Plex Sans Arabic','JetBrains Mono',sans-serif;font-size:16px;line-height:1.5;background:transparent;color:var(--ink);transition:font-size .1s;}
+  #textInputBox .ti-width-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid #E3DDCD;background:#F9F7F1;font-size:11px;color:#7A7263;}
+  #textInputBox .ti-width-row label{font-family:'JetBrains Mono',monospace;white-space:nowrap;font-size:10px;}
+  #textInputBox .ti-width-row input[type=range]{flex:1;accent-color:var(--accent);height:14px;min-width:90px;}
+  #textInputBox .ti-width-row .ti-width-val{font-family:'JetBrains Mono',monospace;min-width:44px;text-align:center;background:#E3DDCD;padding:2px 6px;border-radius:4px;font-size:11px;color:var(--ink);}
+  #textInputBox .ti-width-row .ti-auto-btn{background:transparent;border:1px solid #B9AF9C;color:#7A7263;border-radius:5px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;}
+  #textInputBox .ti-width-row .ti-auto-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  #textInputBox .ti-actions{display:flex;gap:6px;padding:6px 8px;border-top:1px solid #E3DDCD;background:#F5F2EA;border-radius:0 0 8px 8px;justify-content:space-between;align-items:center;}
+  #textInputBox .ti-actions button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:600;}
+  #textInputBox.editing .ti-actions button#tiOk{background:#4A9EFF;}
+  #textInputBox .ti-actions button.ghost{background:transparent;color:#7A7263;font-weight:400;}
+  #textInputBox .ti-actions button.danger{background:transparent;color:#D1495B;font-weight:500;font-size:12px;padding:5px 10px;}
+  #textInputBox .ti-dir{display:flex;gap:4px;}
+  #textInputBox .ti-dir button{background:#E3DDCD;color:var(--ink);padding:4px 10px;font-size:11px;font-weight:600;}
+  #textInputBox .ti-dir button.active{background:var(--accent);color:#fff;}
+
+  #translatePanel{display:none;position:fixed;right:20px;top:90px;width:min(400px,92vw);background:#fff;border:1px solid #E3DDCD;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.28);z-index:250;overflow:hidden;direction:rtl;max-height:calc(100vh - 110px);max-height:calc(100dvh - 110px);flex-direction:column;}
+  #translatePanel.show{display:flex;}
+  #translatePanel .tp-header{background:var(--ink);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;}
+  #translatePanel .tp-header button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
+  #translatePanel .tp-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  #translatePanel .tp-header{flex:none;}
+  #translatePanel .tp-langs{display:flex;gap:8px;align-items:center;justify-content:center;}
+  #translatePanel .tp-langs select{flex:1;padding:6px 8px;border:1px solid #E3DDCD;border-radius:8px;font-family:inherit;font-size:13px;background:#F9F7F1;cursor:pointer;}
+  #translatePanel .tp-swap{background:var(--accent);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;flex:none;display:flex;align-items:center;justify-content:center;}
+  #translatePanel textarea{width:100%;min-height:80px;border:1px solid #E3DDCD;border-radius:10px;padding:10px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;resize:vertical;background:#FCFAF4;outline:none;}
+  #translatePanel .tp-result{min-height:80px;border:1px solid #E3DDCD;border-radius:10px;padding:10px;background:#FBEFE4;font-size:14px;line-height:1.6;white-space:pre-wrap;max-height:40vh;overflow-y:auto;flex:none;overscroll-behavior:contain;}
+  #translatePanel .tp-actions{display:flex;gap:8px;}
+  #translatePanel .tp-actions button{flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;background:var(--accent);color:#fff;}
+  #translatePanel .tp-actions button.ghost{background:#E3DDCD;color:var(--ink);font-weight:500;}
+
+  #selBar{position:fixed;display:none;z-index:180;background:var(--ink);border:1px solid var(--accent);border-radius:10px;padding:6px 8px;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);direction:rtl;pointer-events:none;}
+  #selBar > *{pointer-events:auto;}
+  #selBar.show{display:flex;}
+  #selBar #selColorRack{display:flex;gap:6px;align-items:center;}
+  #selBar .sel-pen{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.2);flex:none;transition:transform .12s;}
+  #selBar .sel-pen:hover{transform:scale(1.12);}
+  #selBar .sel-pen.selected{border-color:#fff;box-shadow:0 0 0 2px rgba(232,121,60,.7);}
+  #selBar input[type=range]{width:70px;accent-color:var(--accent);}
+  #selBar button.sel-del{background:rgba(209,73,91,.15);border:1px solid rgba(209,73,91,.5);color:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;font-size:13px;line-height:1;}
+  #selBar button.sel-del:hover{background:rgba(209,73,91,.35);}
+  #selBar .sel-hint{color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;}
+
+  @media (max-width:720px){
+    #topbar{padding:4px 8px;gap:6px;}
+    button.tbtn span.lbl{display:none;}
+    .kbd{display:none;}.t-sep{display:none;}
+    .tool-btn span{display:none;}
+    .tool-btn{padding:6px 8px;}
+    .tb-label{display:none;}
+    input[type=range].tb-range{width:48px;}
+    #pageIndicator .pg-label{display:none;}
+    #pageIndicator .pg-num{font-size:15px;}
+    .color-picker-btn{width:32px;height:32px;}
+    .pen{width:18px;height:18px;}
+    #translatePanel{right:8px;left:8px;width:auto;top:80px;}
+    #pdfCtxMenu{min-width:200px;}
+    #navBar{right:6px;width:16px;top:96px;bottom:10px;}
+    #navThumb{width:11px;min-height:26px;}
+    #viewer{padding:30px 24px 60px 24px;}
+  }
+/* مؤشر الحفظ: مقاس ثابت عشان تغيّر النص (جاري الحفظ.../تم الحفظ ✓) ما يحرّكش الشريط ولا الملف */
+#saveStatus{flex:0 0 auto;box-sizing:border-box;width:104px;height:16px;line-height:16px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit;letter-spacing:0;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbarWrap">
+  <div id="topbar">
+    <div class="brand"><span class="dot"></span><b>قلم PDF</b><span class="mono">v1</span></div>
+    <button class="tbtn" id="btnHelp" style="padding:4px 8px;">؟</button>
+    <div class="sep"></div>
+    <button class="tbtn" id="btnOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+      <span class="lbl">فتح ملف</span>
+    </button>
+    <div class="sep"></div>
+    <button class="tbtn" id="btnZoomOut">−</button>
+    <span class="mono" id="zoomLabel" style="font-size:12px;min-width:44px;text-align:center;cursor:pointer;">100%</span>
+    <button class="tbtn" id="btnZoomIn">+</button>
+    <button class="tbtn" id="btnZoomFit" title="ملاءمة">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+      <span class="lbl">ملاءمة</span>
+    </button>
+    <div class="sep"></div>
+    <div id="pageIndicator">
+      <span class="pg-label"><span>الصفحة</span></span>
+      <span class="pg-num" id="pgNum">1</span>
+      <span style="font-size:14px;color:var(--muted);font-family:'JetBrains Mono',monospace;">/</span>
+      <span class="pg-total" id="pgTotal">1</span>
+    </div>
+    <div class="sep"></div>
+    <button class="tbtn" id="btnTranslate" title="ترجمة (G)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h7M9 3v2c0 4-2 7-5 9"/><path d="M5 9c0 2 2 4 4 5"/><path d="M14 9l4 10m-6 0l4-10m-3 6h4"/></svg>
+      <span class="lbl">ترجمة</span>
+    </button>
+    <div class="sep"></div>
+    <button class="tbtn" id="btnExternal" title="فتح في تبويب جديد">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+      <span class="lbl">افتح بره</span>
+    </button>
+    <button class="tbtn" id="btnFullscreen" title="ملء الشاشة (F)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+      <span class="lbl">ملء الشاشة</span>
+    </button>
+    <div class="sep"></div>
+    <span id="saveStatus" style="display:none;" role="status" aria-live="polite"></span>
+    <button class="tbtn" id="btnClearAll" title="حذف كل التعديلات (مع حفظ نسخة احتياطية أولاً)" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/></svg>
+      <span class="lbl">حذف الكل</span>
+    </button>
+    <button class="tbtn primary" id="btnExport" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+      <span class="lbl">تنزيل PDF</span>
+    </button>
+  </div>
+  <i class="tbFade l"></i><i class="tbFade r"></i>
+  <div id="topbarScroll"><div id="topbarScrollThumb"></div></div>
+  </div>
+
+  <div id="toolbar">
+    <div id="toolbarRow">
+      <button class="tool-btn" data-tool="select" title="تحديد / سحب / تعديل (1/S)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l7 17 2-7 7-2z"/></svg>
+        <span>تحديد / سحب</span>
+      </button>
+      <div class="t-sep"></div>
+      <button class="tool-btn" data-tool="pen" title="قلم (2/P)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+        <span>قلم</span>
+      </button>
+      <div class="pen-rack" id="colorRack"></div>
+      <span class="tb-label" id="widthLabel">السُمك</span>
+      <input type="range" class="tb-range" id="widthRange" min="1" max="40" value="4">
+      <div class="t-sep"></div>
+      <button class="tool-btn" data-tool="highlighter" title="تظليل حر (3/H)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l6-6 4 4-6 6H9v-4z"/><path d="M5 21l3-3"/></svg>
+        <span>تظليل حر</span>
+      </button>
+      <div class="t-sep" id="hiSepStart" style="display:none;"></div>
+      <div id="hiGroup" style="display:none;align-items:center;gap:6px;">
+        <button class="tool-btn" data-tool="underline" title="تسطير (U)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0012 0V4M4 20h16"/></svg><span>تسطير</span></button>
+        <button class="tool-btn" data-tool="strike" title="شطب (K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v4a6 6 0 0012 0V4M4 12h16M4 20h16"/></svg><span>شطب</span></button>
+      </div>
+      <div class="t-sep" id="hiSepEnd" style="display:none;"></div>
+      <span class="tb-label" id="opLabel" style="display:none;">شفافية</span>
+      <input type="range" class="tb-range" id="opRange" min="10" max="90" value="38" style="display:none;">
+      <div class="t-sep"></div>
+      <button class="tool-btn" data-tool="eraser" title="ممحاة (4/E)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="13" width="9" height="6" rx="1" transform="rotate(-45 8 16)"/></svg>
+        <span>ممحاة</span>
+      </button>
+      <div class="t-sep" id="shapesSepStart" style="display:none;"></div>
+      <div id="shapesGroup" style="display:none;align-items:center;gap:6px;">
+        <button class="tool-btn" data-tool="line" title="خط (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/></svg><span>خط</span></button>
+        <button class="tool-btn" data-tool="arrow" title="سهم (A)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 7 20 12 14 17"/></svg><span>سهم</span></button>
+        <button class="tool-btn" data-tool="rect" title="مستطيل (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg><span>مستطيل</span></button>
+        <button class="tool-btn" data-tool="circle" title="دائرة (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span>دائرة</span></button>
+        <button class="tool-btn" data-tool="polygon" title="مضلع (Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 3 20 8 20 16 12 21 4 16 4 8"/></svg><span>مضلع</span></button>
+        <button class="tool-btn" data-tool="cloud" title="سحابة (O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16c-2 0-3-1.5-3-3.5S4.5 9 6.5 9C7 6 9 4 12 4s5 2 5.5 5c2 .5 3.5 2 3.5 4s-1.5 3.5-3.5 3.5H6z"/></svg><span>سحابة</span></button>
+        <button class="tool-btn" data-tool="callout" title="فقاعة (Q)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v10H9l-4 4v-4H4z"/></svg><span>فقاعة</span></button>
+      </div>
+      <div class="t-sep" id="shapesSepEnd" style="display:none;"></div>
+      <button class="tool-btn" data-tool="text" title="كتابة نص (T)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6h14M12 6v14M8 20h8"/></svg>
+        <span>نص</span>
+      </button>
+      <span class="tb-label" id="fontLabel" style="display:none;">حجم</span>
+      <input type="range" class="tb-range" id="fontRange" min="10" max="80" value="24" style="display:none;">
+      <div class="t-sep"></div>
+      <button class="tb-btn" id="btnUndo" title="تراجع (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12H9"/></svg></button>
+      <button class="tb-btn" id="btnRedo" title="إعادة (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h5"/></svg></button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="emptyState">
+      <div id="quickResume" style="display:none;"></div>
+      <div id="dropZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0L7 9m5-5l5 5"/><path d="M5 16v3a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
+        <h2>اسحب ملف PDF هنا</h2>
+        <p>أو اضغط للاختيار من جهازك</p>
+      </div>
+      <div id="recentBox" style="display:none;"><h3>آخر الملفات</h3><div id="recentList"></div></div>
+    </div>
+    <div id="viewer" style="display:none;"></div>
+  </div>
+
+  <div id="navBar" title="اسحب للتنقل في الملف">
+    <span class="nav-cap nav-cap-top"></span>
+    <div id="navThumb"></div>
+    <span class="nav-cap nav-cap-bottom"></span>
+    <div id="navTooltip">صفحة 1</div>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+</div>
+
+<div id="pdfCtxMenu">
+  <div class="ctx-item" data-act="copy"><span class="ctx-icon">📋</span><span>نسخ النص</span><span class="ctx-shortcut">Ctrl+C</span></div>
+  <div class="ctx-item" data-act="comment"><span class="ctx-icon">📝</span><span>إضافة كتعليق</span></div>
+  <div class="ctx-item" data-act="search"><span class="ctx-icon">🔍</span><span>ابحث في جوجل</span></div>
+  <div class="ctx-item" data-act="search-youtube"><span class="ctx-icon">▶️</span><span>ابحث في يوتيوب</span></div>
+  <div class="ctx-item ctx-has-ai" data-act="ai-menu">
+    <span class="ctx-icon">🤖</span><span>اسأل الذكاء الاصطناعي</span><span class="ctx-arrow">◂</span>
+    <div class="ctx-aimenu">
+      <div class="ctx-item" data-act="ai-claude"><span class="ai-dot" style="background:#D97757">C</span><span>Claude</span><span class="ai-tag auto">ينسخ ويلصق</span></div>
+      <div class="ctx-item" data-act="ai-chatgpt"><span class="ai-dot" style="background:#10A37F">G</span><span>ChatGPT</span><span class="ai-tag auto">ينسخ ويلصق</span></div>
+      <div class="ctx-item" data-act="ai-gemini"><span class="ai-dot" style="background:#4285F4">G</span><span>Gemini</span><span class="ai-tag">يفتح فقط (النص منسوخ)</span></div>
+      <div class="ctx-item" data-act="ai-glm"><span class="ai-dot" style="background:#3B5BDB">Z</span><span>GLM</span><span class="ai-tag">يفتح فقط (النص منسوخ)</span></div>
+      <div class="ctx-item" data-act="ai-deepseek"><span class="ai-dot" style="background:#4D6BFE">D</span><span>DeepSeek</span><span class="ai-tag">يفتح فقط (النص منسوخ)</span></div>
+      <div class="ctx-item" data-act="ai-kimi"><span class="ai-dot" style="background:#1B1B1B;border:1px solid #555">K</span><span>Kimi</span><span class="ai-tag">يفتح فقط (النص منسوخ)</span></div>
+    </div>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item ctx-has-submenu" data-act="highlight" data-markup="text-highlight">
+    <span class="ctx-icon">🖍️</span><span>تظليل</span>
+    <span class="ctx-check">✓</span>
+    <div class="ctx-swatches" id="highlightSwatches">
+      <span class="sw selected" data-color="#FFE066" style="background:#FFE066;"></span>
+      <span class="sw" data-color="#8CE99A" style="background:#8CE99A;"></span>
+      <span class="sw" data-color="#FFA8C5" style="background:#FFA8C5;"></span>
+      <span class="sw" data-color="#74C0FC" style="background:#74C0FC;"></span>
+      <span class="sw" data-color="#FFC9C9" style="background:#FFC9C9;"></span>
+      <span class="sw" data-color="#D0BFFF" style="background:#D0BFFF;"></span>
+      <span class="sw-sep"></span>
+      <button class="mk-btn" data-act="highlight-apply" data-markup="text-highlight" title="تظليل" style="font-size:14px;">🖍️</button>
+      <button class="mk-btn" data-act="underline" data-markup="text-underline" title="تسطير"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0012 0V4M4 20h16"/></svg></button>
+      <button class="mk-btn" data-act="strike" data-markup="text-strike" title="شطب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v4a6 6 0 0012 0V4M4 12h16M4 20h16"/></svg></button>
+    </div>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" data-act="translate"><span class="ctx-icon">🌐</span><span>ترجمة عربي ↔ إنجليزي</span></div>
+</div>
+
+<div id="translatePanel">
+  <div class="tp-header"><span>🌐 الترجمة</span><button id="tpClose">✕</button></div>
+  <div class="tp-body">
+    <div class="tp-langs">
+      <select id="tpFrom">
+        <option value="auto">كشف تلقائي</option>
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="tr">Türkçe</option>
+      </select>
+      <button class="tp-swap" id="tpSwap">⇄</button>
+      <select id="tpTo">
+        <option value="en">English</option>
+        <option value="ar">العربية</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="tr">Türkçe</option>
+      </select>
+    </div>
+    <textarea id="tpInput" placeholder="اكتب أو الصق النص هنا…"></textarea>
+    <div class="tp-actions">
+      <button id="tpTranslate">ترجم الآن</button>
+      <button class="ghost" id="tpClear">مسح</button>
+    </div>
+    <div class="tp-result" id="tpResult">الترجمة ستظهر هنا…</div>
+    <div class="tp-actions">
+      <button class="ghost" id="tpCopy">📋 نسخ</button>
+      <button id="tpInsert">📄 إدراج في الملف</button>
+    </div>
+  </div>
+</div>
+
+<div id="textInputBox">
+  <span class="ti-badge">تعديل</span>
+  <textarea id="tiTextarea" placeholder="اكتب هنا… (عربي / English)"></textarea>
+  <div class="ti-width-row">
+    <label>عرض النص</label>
+    <input type="range" id="tiWidthRange" min="100" max="960" value="600" step="20">
+    <span class="ti-width-val" id="tiWidthVal">600</span>
+    <button class="ti-auto-btn" id="tiAutoWidth" title="عرض تلقائي حسب المساحة">تلقائي</button>
+  </div>
+  <div class="ti-actions">
+    <div class="ti-dir">
+      <button data-dir="rtl">RTL</button>
+      <button data-dir="ltr">LTR</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="danger" id="tiDelete" style="display:none;">🗑️ حذف</button>
+      <button class="ghost" id="tiCancel">إلغاء</button>
+      <button id="tiOk">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<div id="selBar">
+  <span class="sel-hint">اللون</span>
+  <div id="selColorRack"></div>
+  <span class="sel-hint" id="selWidthHint">السُمك</span>
+  <input type="range" id="selWidth" min="1" max="40" value="4">
+  <button class="sel-del" id="selDelete" title="حذف (Delete)">🗑️ حذف</button>
+</div>
+
+<div id="waitingForParent">
+  <div class="spinner"></div>
+  <h3>⏳ بانتظار الملف...</h3>
+  <p id="waitingHint" style="display:none;margin:8px 16px 0;font-size:14px;opacity:.8;text-align:center">الملف كبير أو النت بطيء — لسه بيتحمّل...</p>
+</div>
+
+<div id="helpOverlay">
+  <div id="helpPanel">
+    <h3>⌨️ اختصارات <button id="helpClose">✕</button></h3>
+    <div class="hk-row"><span>🔲 تحديد / سحب / تعديل</span><span><span class="kbd">1</span><span class="kbd">S</span></span></div>
+    <div class="hk-row"><span>✏️ قلم</span><span><span class="kbd">2</span><span class="kbd">P</span></span></div>
+    <div class="hk-row"><span>🖍️ تظليل حر</span><span><span class="kbd">3</span><span class="kbd">H</span></span></div>
+    <div class="hk-row"><span>▁ تسطير / ╳ شطب</span><span><span class="kbd">U</span><span class="kbd">K</span></span></div>
+    <div class="hk-row"><span>🧹 ممحاة (نقطة نقطة)</span><span><span class="kbd">4</span><span class="kbd">E</span></span></div>
+    <div class="hk-row"><span>📏 خط</span><span><span class="kbd">L</span></span></div>
+    <div class="hk-row"><span>➡️ سهم</span><span><span class="kbd">A</span></span></div>
+    <div class="hk-row"><span>▭ مستطيل / ◯ دائرة</span><span><span class="kbd">R</span><span class="kbd">C</span></span></div>
+    <div class="hk-row"><span>⬡ مضلع / ☁️ سحابة / 💬 فقاعة</span><span><span class="kbd">Y</span><span class="kbd">O</span><span class="kbd">Q</span></span></div>
+    <div class="hk-row"><span>🅰️ نص جديد</span><span><span class="kbd">T</span></span></div>
+    <div class="hk-row"><span>🌐 ترجمة</span><span><span class="kbd">G</span></span></div>
+    <div class="hk-row"><span>↩️ تراجع / ↪️ إعادة</span><span><span class="kbd">Ctrl+Z</span><span class="kbd">Ctrl+Y</span></span></div>
+    <div class="hk-row"><span>🗑️ حذف المحدد</span><span><span class="kbd">Delete</span></span></div>
+    <div class="hk-row"><span>🔍 زوم</span><span><span class="kbd">+</span><span class="kbd">−</span><span class="kbd">0</span></span></div>
+    <div class="hk-row"><span>📄 تنقل</span><span><span class="kbd">Space</span><span class="kbd">Shift+Space</span></span></div>
+    <div class="hk-row"><span>🖥️ ملء الشاشة</span><span><span class="kbd">F</span><span class="kbd">Esc</span></span></div>
+    <p style="margin:14px 0 0;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;">
+      🖱️ بالماوس:<br>
+      • <b>تحديد</b>: اضغط على رسمة لتغيير لونها/سُمكها أو تحريكها<br>
+      • <b>Delete</b> لحذف الرسمة المحددة<br>
+      • <b>انقر مرتين</b> على نص لتعديله<br>
+      • <b>عرض النص</b>: استخدم السلايدر في نافذة الإدخال للتحكم يدويًا<br>
+      • <b>بعد إضافة النص</b> ترجع تلقائيًا لأداة التحديد
+    </p>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="loadingOverlay"><div class="spinner"></div><div class="mono" id="loadingText" style="font-size:13px;"></div></div>
+
+<!-- SRI-TODO -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<!-- SRI-TODO -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+
+  const urlParam = new URLSearchParams(location.search).get("file");
+  const VIA_POST = new URLSearchParams(location.search).get("viapost") === "1";
+  const PDF_URL = VIA_POST ? "" : (urlParam || "");
+  const NORM_W = 1000;
+  const ANN_JSON_NAME = "pdfqalam-annotations.json";
+  const ANN_ORIG_NAME = "pdfqalam-original.pdf";
+  const PDF_ANNOT_PRODUCER = "PDF Qalam";
+
+  let pdfDoc = null;
+  let pdfBytes = null;
+  let originalPdfBytes = null;
+  let currentFile = null, numPages = 0;
+  let pageMeta = [];
+  let strokesByPage = {}, redoByPage = {};
+  let zoom = 1.0, baseScale = 1.0, renderedZoom = 1.0;
+  let currentTool = "select";
+  let currentColor = "#1B2430";
+  let currentWidth = 4;
+  let currentHiOpacity = 0.38;
+  let currentFontSize = 24;
+  let currentTextDir = "auto";
+  let currentTextMaxWidth = 600;
+  let currentTextMaxWidthAuto = true;
+  let drawing = false, activeStroke = null, activePageNum = null;
+  let saveTimer = null, fsHandle = null, pageObserver = null;
+  let renderedPages = new Set(), renderDebounce = null, resizeTimer = null;
+  let pinchState = null, panState = null;
+  let pendingInsertText = null;
+  let selectedRange = null;
+  let ctxMenu = null;
+  let ctxHighlightColor = "#FFE066";
+  let currentMarkupMode = "text-highlight";
+  let navDragging = false;
+  let selectedAnno = null;
+  let annoDragState = null;
+
+  const MIN_ZOOM = 0.25, MAX_ZOOM = 4;
+  const PEN_COLORS = ["#1B2430", "#D1495B", "#2F6FED", "#2F9E44", "#E8793C"];
+  const HI_COLORS  = ["#FFE066", "#8CE99A", "#FFA8C5", "#74C0FC", "#FFD43B"];
+  const CUSTOM_COLORS_KEY = "pdfqalam:custom-colors";
+  const TEXT_FONT_FAMILY = "'IBM Plex Sans Arabic','JetBrains Mono',system-ui,Arial,sans-serif";
+
+  // ✦ تحميل مسبق للخط لضمان دقة القياس في measureText من أول استخدام
+  if(document.fonts && document.fonts.load){
+    document.fonts.load('600 16px "IBM Plex Sans Arabic"').catch(function(){});
+    document.fonts.load('400 16px "IBM Plex Sans Arabic"').catch(function(){});
+  }
+
+  function loadCustomColors(){ try{ const a = JSON.parse(localStorage.getItem(CUSTOM_COLORS_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function saveCustomColor(c){ try{ let a=loadCustomColors(); a=a.filter(x=>String(x).toLowerCase()!==String(c).toLowerCase()); a.unshift(c); if(a.length>8)a=a.slice(0,8); localStorage.setItem(CUSTOM_COLORS_KEY,JSON.stringify(a)); }catch(e){} }
+
+  const $ = s => document.querySelector(s);
+  const btnOpen=$("#btnOpen"), fileInput=$("#fileInput"), dropZone=$("#dropZone");
+  const emptyState=$("#emptyState"), viewer=$("#viewer"), toolbar=$("#toolbar");
+  const colorRack=$("#colorRack"), widthRange=$("#widthRange"), opRange=$("#opRange");
+  const fontRange=$("#fontRange"), saveStatus=$("#saveStatus"), btnExport=$("#btnExport"), btnClearAll=$("#btnClearAll");
+  const zoomLabel=$("#zoomLabel"), recentBox=$("#recentBox"), recentList=$("#recentList");
+  const loadingOverlay=$("#loadingOverlay"), loadingText=$("#loadingText");
+  const mainEl=$("#main"), pageIndicator=$("#pageIndicator");
+  const pgNum=$("#pgNum"), pgTotal=$("#pgTotal"), waitingForParent=$("#waitingForParent");
+  const textInputBox=$("#textInputBox"), tiTextarea=$("#tiTextarea");
+  const translatePanel=$("#translatePanel"), helpOverlay=$("#helpOverlay");
+  const navBar=$("#navBar"), navThumb=$("#navThumb"), navTooltip=$("#navTooltip");
+  const selBar=$("#selBar"), selColorRack=$("#selColorRack"), selWidth=$("#selWidth");
+  const selWidthHint=$("#selWidthHint");
+
+  function toast(msg){
+    const t = $("#toast"); if(!t) return;
+    t.textContent = window.trEn ? window.trEn(msg) : msg; t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove("show"), 2600);
+  }
+  function showLoading(m){ if(loadingText) loadingText.textContent = (window.trEn||(x=>x))(m||"جاري التحميل..."); loadingOverlay.classList.add("show"); }
+  function hideLoading(){ loadingOverlay.classList.remove("show"); }
+  function canvasDpr(c){ return parseFloat(c.dataset.dpr)||1; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function isArabicText(s){ return /[\u0600-\u06FF]/.test(String(s||"")); }
+  function detectDir(text){ return isArabicText(text) ? "rtl" : "ltr"; }
+
+  // ============ Extract embedded attachments via pdf.js ============
+  async function extractAttachmentsViaPdfJs(bytes){
+    const result = {};
+    try{
+      const task = pdfjsLib.getDocument({ data: bytes.slice(0), disableWorker: false, isEvalSupported: false });
+      const doc = await task.promise;
+      try{
+        const atts = await doc.getAttachments();
+        if(atts){
+          for(const [name, info] of Object.entries(atts)){
+            if(!info || !info.content) continue;
+            const src = info.content;
+            const copy = new Uint8Array(src.byteLength);
+            copy.set(src);
+            result[name] = copy;
+          }
+        }
+      }catch(e){ console.warn('pdfjs getAttachments empty/failed:', e && e.message); }
+      try{ doc.destroy(); }catch(_){}
+    }catch(e){ console.warn('extractAttachmentsViaPdfJs failed:', e); }
+    return result;
+  }
+
+  // ============ Merge annotations from a local PDF file ============
+  async function mergeAnnotationsFromPdf(bytes){
+    if(!pdfDoc || !numPages){
+      return { success: false, error: "مفيش ملف مفتوح حاليًا" };
+    }
+    var attachments;
+    try{
+      attachments = await extractAttachmentsViaPdfJs(bytes);
+    }catch(e){
+      return { success: false, error: "تعذّر قراءة الملف" };
+    }
+    var jsonBytes = attachments[ANN_JSON_NAME];
+    if(!jsonBytes){
+      return { success: false, error: "الملف ده مش فيه تعديلات محفوظة" };
+    }
+    var importedStrokes;
+    try{
+      var text = new TextDecoder('utf-8').decode(jsonBytes);
+      importedStrokes = JSON.parse(text);
+    }catch(e){
+      return { success: false, error: "التعديلات تالفة" };
+    }
+    if(!importedStrokes || typeof importedStrokes !== 'object'){
+      return { success: false, error: "التعديلات تالفة" };
+    }
+    var importedPageNums = Object.keys(importedStrokes)
+      .map(function(k){ return parseInt(k, 10); })
+      .filter(function(n){ return !isNaN(n) && n > 0; });
+    var maxImportedPage = importedPageNums.length ? Math.max.apply(null, importedPageNums) : 0;
+    var importedTotal = importedPageNums.reduce(function(sum, n){
+      var arr = importedStrokes[n];
+      return sum + (Array.isArray(arr) ? arr.length : 0);
+    }, 0);
+    if(importedTotal === 0){
+      return { success: false, error: "الملف ده مش فيه تعديلات" };
+    }
+    if(maxImportedPage > numPages){
+      var ok = window.confirm(
+        "⚠️ الملف اللي اخترته فيه تعديلات على " + maxImportedPage + " صفحة،\n" +
+        "بينما الملف المفتوح فيه " + numPages + " صفحة بس.\n\n" +
+        "التعديلات على الصفحات الزيادة هتتجاهل.\n\n" +
+        "هتكمّل؟"
+      );
+      if(!ok) return { success: false, error: "اتلغى النقل" };
+    }
+    strokesByPage = {};
+    redoByPage = {};
+    var count = 0;
+    importedPageNums.forEach(function(pageNum){
+      if(pageNum < 1 || pageNum > numPages) return;
+      var strokes = importedStrokes[pageNum];
+      if(!Array.isArray(strokes) || !strokes.length) return;
+      strokesByPage[pageNum] = strokes;
+      count += strokes.length;
+    });
+    for(var p = 1; p <= numPages; p++) drawPageStrokes(p);
+    try{ deselectAnnotation(); }catch(e){}
+    scheduleSave();
+    return { success: true, count: count };
+  }
+
+  // ============ postMessage ============
+  window.addEventListener("message", function(e){
+    if (e.origin !== location.origin) return;
+    var d = e.data; if(!d || typeof d !== "object") return;
+    if(d.type === "load-progress" && typeof d.pct === "number"){
+      var wt = waitingForParent.querySelector("h3");
+      if(wt && !pdfDoc) wt.textContent = (window.trEn || function(x){ return x; })("⏳ جاري تحميل الملف...") + " " + d.pct + "%";
+      return;
+    }
+    if(d.type === "load-pdf" && d.bytes){
+      if(e.source && e.source.postMessage){ try{ e.source.postMessage({type:"load-pdf-received"},"*"); }catch(x){} }
+      if(window.__pdfRecv) return;
+      window.__pdfRecv = true;
+      try{
+        waitingForParent.classList.remove("show");
+        var blob = new Blob([d.bytes], {type:"application/pdf"});
+        var file = new File([blob], d.name||"document.pdf", {type:"application/pdf"});
+        loadFile(file, null).then(function(){
+          if(e.source && e.source.postMessage) e.source.postMessage({type:"load-pdf-ack",success:true},"*");
+        }).catch(function(err){
+          window.__pdfRecv = false;
+          if(e.source && e.source.postMessage) e.source.postMessage({type:"load-pdf-ack",success:false,error:String(err)},"*");
+        });
+      }catch(err){}
+      return;
+    }
+    if(d.type === "merge-annotations-from-pdf" && d.bytes){
+      mergeAnnotationsFromPdf(d.bytes).then(function(result){
+        if(e.source && e.source.postMessage){
+          try{
+            e.source.postMessage({
+              type: "merge-annotations-result",
+              success: result.success,
+              count: result.count,
+              error: result.error
+            }, "*");
+          }catch(err){}
+        }
+      }).catch(function(err){
+        if(e.source && e.source.postMessage){
+          try{
+            e.source.postMessage({
+              type: "merge-annotations-result",
+              success: false,
+              error: String(err && err.message || err)
+            }, "*");
+          }catch(err2){}
+        }
+      });
+      return;
+    }
+    if(d.type === "ping" && e.source){ try{ e.source.postMessage({type:"pong",ready:true},"*"); }catch(err){} }
+  });
+  function announceReady(){ if(window.parent && window.parent !== window){ try{ window.parent.postMessage({type:"annotator-ready"},"*"); }catch(e){} } }
+
+  const STORAGE_PREFIX = "pdfqalam:";
+  async function storeGet(k){ try{ const r = localStorage.getItem(STORAGE_PREFIX+k); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+  async function storeSet(k,v){ try{ localStorage.setItem(STORAGE_PREFIX+k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+  function fileId(n,s){ return "f_"+s+"_"+n.replace(/[^a-zA-Z0-9_\-\.]/g,"_").slice(0,80); }
+
+  function idbOpen(){
+    return new Promise((res,rej)=>{
+      const r = indexedDB.open("pdf-annotator-db", 1);
+      r.onupgradeneeded = () => { if(!r.result.objectStoreNames.contains("handles")) r.result.createObjectStore("handles"); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbSetHandle(id,h){ try{ const db=await idbOpen(); return new Promise(r=>{ const t=db.transaction("handles","readwrite"); t.objectStore("handles").put(h,id); t.oncomplete=()=>r(true); t.onerror=()=>r(false); }); }catch(e){ return false; } }
+  async function idbGetHandle(id){ try{ const db=await idbOpen(); return new Promise(r=>{ const t=db.transaction("handles","readonly"); const rq=t.objectStore("handles").get(id); rq.onsuccess=()=>r(rq.result||null); rq.onerror=()=>r(null); }); }catch(e){ return null; } }
+
+  async function getRecentList(){ const l = await storeGet("recent-files-list"); return Array.isArray(l)?l:[]; }
+  async function upsertRecent(e){ let l=await getRecentList(); l=l.filter(x=>x.id!==e.id); l.unshift(e); l=l.slice(0,10); await storeSet("recent-files-list",l); return l; }
+  function fmtSize(b){ return b>1048576?(b/1048576).toFixed(1)+" MB":Math.round(b/1024)+" KB"; }
+  function fmtDate(ts){ const d=new Date(ts); return d.toLocaleDateString("ar-EG",{day:"numeric",month:"short"})+" "+d.toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}); }
+  async function renderRecentList(){
+    const l = await getRecentList();
+    if(!l.length){ recentBox.style.display="none"; return; }
+    recentBox.style.display = "block";
+    recentList.innerHTML = "";
+    for(const it of l){
+      const d = document.createElement("div");
+      d.className = "recent-item";
+      d.innerHTML = '<div class="ric">PDF</div><div class="ri-meta"><div class="ri-name">'+escapeHtml(it.name)+'</div><div class="ri-sub">'+fmtSize(it.size)+' · '+fmtDate(it.savedAt)+'</div></div>';
+      d.addEventListener("click", ()=>openRecent(it));
+      recentList.appendChild(d);
+    }
+  }
+  async function openRecent(item){
+    const h = await idbGetHandle(item.id);
+    if(h){
+      try{
+        const p = await h.requestPermission({mode:"read"});
+        if(p==="granted"){ const f=await h.getFile(); await loadFile(f,h); return; }
+      }catch(e){}
+    }
+    toast('اختر نفس الملف "'+item.name+'"');
+    fileInput.onchange = async ev => { const f=ev.target.files[0]; if(f) await loadFile(f,null); fileInput.onchange=defaultFileInputHandler; };
+    fileInput.click();
+  }
+
+  async function pickFile(){
+    if(window.showOpenFilePicker){
+      try{ const [h]=await window.showOpenFilePicker({types:[{description:"PDF",accept:{"application/pdf":[".pdf"]}}]}); const f=await h.getFile(); await loadFile(f,h); return; }
+      catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    fileInput.click();
+  }
+  function defaultFileInputHandler(ev){ const f=ev.target.files[0]; if(f) loadFile(f,null); }
+  fileInput.addEventListener("change", defaultFileInputHandler);
+  btnOpen.addEventListener("click", pickFile);
+  dropZone.addEventListener("click", pickFile);
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.classList.remove("drag");
+    const f = e.dataTransfer.files[0];
+    if(f && f.type==="application/pdf") loadFile(f,null);
+    else if(f) toast("من فضلك اسحب ملف PDF فقط");
+  });
+
+  // ============ Load file ============
+  async function loadFile(file, handle){
+    if(!file || file.type !== "application/pdf"){ toast("هذا الملف ليس PDF"); return; }
+    showLoading("جاري فتح الملف...");
+    try{
+      const buf = await file.arrayBuffer();
+      pdfBytes = buf;
+      originalPdfBytes = buf;
+
+      let recoveredFromAttachment = false;
+      let recoveredStrokes = null;
+      let recoveredOriginalBytes = null;
+      try{
+        const attachments = await extractAttachmentsViaPdfJs(buf);
+        const names = Object.keys(attachments);
+        if(names.length) console.log('📎 PDF attachments found:', names);
+        const orig = attachments[ANN_ORIG_NAME];
+        const jsonBytes = attachments[ANN_JSON_NAME];
+        if(orig && jsonBytes){
+          const clean = new Uint8Array(orig.byteLength);
+          clean.set(orig);
+          recoveredOriginalBytes = clean.buffer;
+          const jsonText = new TextDecoder('utf-8').decode(jsonBytes);
+          const parsed = JSON.parse(jsonText);
+          if(parsed && typeof parsed === 'object'){
+            recoveredStrokes = parsed;
+            recoveredFromAttachment = true;
+          }
+        }
+      }catch(e){ console.warn('attachment recovery skipped:', e); }
+
+      currentFile = { id: fileId(file.name, file.size), name: file.name, size: file.size };
+      fsHandle = handle || null;
+      if(handle) await idbSetHandle(currentFile.id, handle);
+
+      const renderBytes = recoveredFromAttachment ? recoveredOriginalBytes : buf;
+      originalPdfBytes = recoveredFromAttachment ? recoveredOriginalBytes : buf;
+      pdfBytes = renderBytes;
+
+      const task = pdfjsLib.getDocument({ data: renderBytes.slice(0), isEvalSupported: false });
+      pdfDoc = await task.promise;
+      numPages = pdfDoc.numPages;
+
+      if(recoveredFromAttachment){
+        strokesByPage = recoveredStrokes || {};
+        const totalStrokes = Object.keys(strokesByPage).reduce((s,k) => s + (strokesByPage[k]||[]).length, 0);
+        toast("✨ تم استرجاع " + totalStrokes + " عنصر — يمكنك تعديلها الآن");
+      } else {
+        const saved = await storeGet("annot:" + currentFile.id);
+        strokesByPage = (saved && saved.pages) ? saved.pages : {};
+      }
+      redoByPage = {};
+      selectedAnno = null; annoDragState = null;
+      deselectAnnotation();
+
+      zoom = 1.0; renderedZoom = 1.0;
+      zoomLabel.textContent = "100%";
+      pgTotal.textContent = numPages;
+      await renderAllPages();
+      emptyState.style.display = "none";
+      viewer.style.display = "flex";
+      toolbar.classList.add("show");
+      pageIndicator.classList.add("show");
+      navBar.classList.add("show");
+      saveStatus.style.display = "block";
+      btnExport.style.display = "flex";
+      btnClearAll.style.display = "flex";
+      if(recoveredFromAttachment) setSaveStatus("جاهز — التعديلات مسترجعة");
+      else setSaveStatus(Object.keys(strokesByPage).some(k => (strokesByPage[k]||[]).length) ? "تم تحميل تعليقاتك السابقة" : "جاهز");
+      await upsertRecent({ id: currentFile.id, name: currentFile.name, size: currentFile.size, savedAt: Date.now() });
+      hideLoading();
+    }catch(err){
+      console.error(err); hideLoading(); toast("تعذّر فتح الملف");
+    }
+  }
+
+  // ============ Zoom ============
+  function clampZoom(z){ return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)); }
+  function setZoom(nz, anchor){
+    nz = clampZoom(nz);
+    if(Math.abs(nz-zoom)<0.001) return;
+    const rect = mainEl.getBoundingClientRect();
+    let ax=null,ay=null,vx=rect.width/2,vy=rect.height/2;
+    if(anchor){ ax=anchor.x-rect.left+mainEl.scrollLeft; ay=anchor.y-rect.top+mainEl.scrollTop; vx=anchor.x-rect.left; vy=anchor.y-rect.top; }
+    const lz = renderedZoom;
+    zoom = nz; zoomLabel.textContent = Math.round(zoom*100)+"%";
+    clearTimeout(renderDebounce);
+    renderDebounce = setTimeout(async ()=>{
+      await renderAllPages();
+      if(ax!==null){ const r=zoom/lz; mainEl.scrollLeft=Math.max(0,ax*r-vx); mainEl.scrollTop=Math.max(0,ay*r-vy); }
+      updateSelBar();
+    }, 130);
+  }
+  function zoomBy(f){ const r=mainEl.getBoundingClientRect(); setZoom(zoom*f,{x:r.left+r.width/2,y:r.top+r.height/2}); }
+  $("#btnZoomIn").addEventListener("click",()=>zoomBy(1.2));
+  $("#btnZoomOut").addEventListener("click",()=>zoomBy(1/1.2));
+  $("#btnZoomFit").addEventListener("click",()=>setZoom(1,null));
+  zoomLabel.addEventListener("click",()=>setZoom(1,null));
+
+  mainEl.addEventListener("wheel", e => {
+    if(!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    let dy = e.deltaY; if(e.deltaMode===1) dy*=16;
+    setZoom(zoom*Math.exp(-dy*0.0018), {x:e.clientX, y:e.clientY});
+  }, {passive:false});
+
+  function tDist(e){ return Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+  mainEl.addEventListener("touchstart", e => { if(e.touches.length===2){ pinchState={d:tDist(e),z:zoom}; panState=null; } }, {passive:true});
+  mainEl.addEventListener("touchmove", e => {
+    if(!pinchState || e.touches.length!==2) return;
+    e.preventDefault();
+    const d=tDist(e); const mx=(e.touches[0].clientX+e.touches[1].clientX)/2; const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    setZoom(pinchState.z*(d/pinchState.d), {x:mx,y:my});
+  }, {passive:false});
+  mainEl.addEventListener("touchend", e => { if(e.touches.length<2) pinchState=null; }, {passive:true});
+
+  $("#btnExternal").addEventListener("click",()=>{
+    if(!pdfBytes){ toast("مفيش ملف مفتوح"); return; }
+    const blob = new Blob([pdfBytes],{type:"application/pdf"});
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url,"_blank");
+    if(!w) toast("المتصفح منع فتح النافذة — ممكن تسمح بالنوافذ المنبثقة وتجرّب تاني");
+    setTimeout(()=>{ try{URL.revokeObjectURL(url);}catch(e){} },60000);
+  });
+  function fsActive(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+  function toggleFullscreen(){
+    const root = document.documentElement;
+    if(!fsActive()){ const req=root.requestFullscreen||root.webkitRequestFullscreen; if(req){ const p=req.call(root); if(p&&p.catch) p.catch(()=>toast("تعذّر")); } }
+    else { const ex=document.exitFullscreen||document.webkitExitFullscreen; if(ex) ex.call(document); }
+  }
+  $("#btnFullscreen").addEventListener("click", toggleFullscreen);
+  ["fullscreenchange","webkitfullscreenchange"].forEach(ev=>document.addEventListener(ev,()=>{
+    const on = fsActive(); $("#btnFullscreen").classList.toggle("active",on);
+    if(pdfDoc){ clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>renderAllPages(true).then(updateSelBar),150); }
+  }));
+  $("#btnHelp").addEventListener("click",()=>helpOverlay.classList.add("show"));
+  $("#helpClose").addEventListener("click",()=>helpOverlay.classList.remove("show"));
+  helpOverlay.addEventListener("click", e => { if(e.target===helpOverlay) helpOverlay.classList.remove("show"); });
+
+  // ✦ BBox يحسب الصندوق حسب اتجاه النص (RTL: يمتد لليسار من s.x)
+  function getTextAnnotationBBox(s){
+    const fs = s.fontSize || 24;
+    const lines = String(s.text||"").split("\n");
+    const dir = s.dir || (isArabicText(s.text) ? "rtl" : "ltr");
+    let approxW;
+    if(s.maxWidth && s.maxWidth > 20){
+      approxW = s.maxWidth;
+    } else {
+      try{
+        const mctx = getMeasureCtx(fs);
+        let maxW = 0;
+        for(const ln of lines){
+          const w = mctx.measureText(ln).width;
+          if(w > maxW) maxW = w;
+        }
+        approxW = Math.max(60, maxW);
+      }catch(e){
+        let maxLen = 0;
+        for(const ln of lines) if(ln.length > maxLen) maxLen = ln.length;
+        approxW = Math.max(60, maxLen * fs * 0.6);
+      }
+    }
+    const totalH = Math.max(fs * 1.35, lines.length * fs * 1.35);
+    const x = (dir === "rtl") ? (s.x - approxW) : s.x;
+    return { x: x, y: s.y, w: approxW, h: totalH };
+  }
+  function findTextAnnotationAt(clientX, clientY){
+    if(!pdfDoc) return null;
+    const wraps = viewer.querySelectorAll(".page-wrap");
+    for(const wrap of wraps){
+      const rect = wrap.getBoundingClientRect();
+      if(clientX < rect.left || clientX > rect.right) continue;
+      if(clientY < rect.top  || clientY > rect.bottom) continue;
+      const p = parseInt(wrap.dataset.page, 10);
+      if(!pageMeta[p]) continue;
+      const scale = pageMeta[p].width / NORM_W;
+      const nx = (clientX - rect.left) / scale;
+      const ny = (clientY - rect.top)  / scale;
+      const list = strokesByPage[p] || [];
+      for(let i = list.length - 1; i >= 0; i--){
+        const s = list[i];
+        if(s.tool !== "text") continue;
+        const bb = getTextAnnotationBBox(s);
+        if(nx >= bb.x - 10 && nx <= bb.x + bb.w + 10 &&
+           ny >= bb.y - 10 && ny <= bb.y + bb.h + 10){
+          return { stroke: s, page: p, offsetX: nx - s.x, offsetY: ny - s.y };
+        }
+      }
+    }
+    return null;
+  }
+
+  mainEl.addEventListener("pointerdown", e => {
+    if(!pdfDoc) return;
+    if(e.pointerType !== "mouse" || e.button !== 0) return;
+    if(e.target.closest("#emptyState")||e.target.closest("button")||e.target.closest("input")) return;
+    if(e.target.closest(".ink-canvas")) return;
+    if(e.target.closest(".textLayer")) return;
+    if(currentTool !== "select") return;
+    panState = {x:e.clientX, y:e.clientY, sl:mainEl.scrollLeft, st:mainEl.scrollTop};
+    mainEl.classList.add("grabbing");
+  });
+
+  window.addEventListener("pointermove", e => {
+    if(annoDragState){
+      const canvas = getInkCanvas(annoDragState.page);
+      if(!canvas) return;
+      const pt = toNorm(annoDragState.page, e.clientX, e.clientY, canvas);
+      const dx = pt.x - annoDragState.lastPt.x;
+      const dy = pt.y - annoDragState.lastPt.y;
+      if(Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01){
+        translateStroke(annoDragState.stroke, dx, dy);
+        annoDragState.lastPt = pt;
+        annoDragState.moved = true;
+        // ✦ لو النص، نعيد اللفّ حسب الموضع والعرض الجديد
+        if(annoDragState.stroke.tool === "text"){
+          const s = annoDragState.stroke;
+          if(!s.maxWidth || s.maxWidth <= 20){
+            const dir = s.dir || (isArabicText(s.origText||s.text) ? "rtl" : "ltr");
+            const mw = computeAvailWidth(s.x, dir, null);
+            s.text = wrapTextForAnnotation(s.origText || s.text, s.x, s.fontSize, dir, mw);
+          }
+        }
+        drawPageStrokes(annoDragState.page);
+        updateSelBar();
+      }
+      return;
+    }
+    if(!panState) return;
+    mainEl.scrollLeft = panState.sl - (e.clientX - panState.x);
+    mainEl.scrollTop = panState.st - (e.clientY - panState.y);
+  });
+
+  window.addEventListener("pointerup", () => {
+    if(annoDragState){ if(annoDragState.moved) scheduleSave(); annoDragState = null; }
+    panState = null;
+    mainEl.classList.remove("grabbing");
+  });
+  window.addEventListener("pointercancel", () => {
+    annoDragState = null; panState = null;
+    mainEl.classList.remove("grabbing");
+  });
+
+  mainEl.addEventListener("pointermove", e => {
+    if(annoDragState || panState) return;
+    if(!pdfDoc) return;
+    if(currentTool !== "select"){ if(mainEl.style.cursor === "move") mainEl.style.cursor = ""; return; }
+    const hit = findTextAnnotationAt(e.clientX, e.clientY);
+    if(hit){ mainEl.style.cursor = "move"; }
+    else if(mainEl.style.cursor === "move"){ mainEl.style.cursor = ""; }
+  }, {passive:true});
+
+  mainEl.addEventListener("dblclick", e => {
+    if(currentTool !== "select" || !pdfDoc) return;
+    const hit = findTextAnnotationAt(e.clientX, e.clientY);
+    if(!hit || hit.stroke.tool !== "text") return;
+    e.preventDefault(); e.stopPropagation();
+    deselectAnnotation();
+    openTextInputForEdit(hit.stroke, hit.page, e.clientX, e.clientY);
+  });
+
+  function currentPage(){
+    if(!pdfDoc) return 1;
+    const mr = mainEl.getBoundingClientRect();
+    let cur = 1;
+    viewer.querySelectorAll(".page-wrap").forEach(w => {
+      const r = w.getBoundingClientRect();
+      if(r.top < mr.top + mr.height*0.45) cur = parseInt(w.dataset.page,10);
+    });
+    return cur;
+  }
+  function updatePageIndicator(){
+    const p = currentPage();
+    if(pgNum) pgNum.textContent = p;
+    if(pgTotal) pgTotal.textContent = numPages;
+    if(navTooltip) navTooltip.textContent = "صفحة " + p;
+  }
+  function goToPage(p){
+    if(!pdfDoc) return;
+    p = Math.max(1, Math.min(numPages, p));
+    const w = viewer.querySelector('.page-wrap[data-page="'+p+'"]');
+    if(!w) return;
+    const mr = mainEl.getBoundingClientRect();
+    const wr = w.getBoundingClientRect();
+    mainEl.scrollBy({top: wr.top - mr.top - 8, behavior:"smooth"});
+    if(pgNum) pgNum.textContent = p;
+  }
+  pageIndicator.addEventListener("click",()=>{
+    if(!pdfDoc) return;
+    const n = prompt("رقم الصفحة (1 - "+numPages+"):", String(currentPage()));
+    if(n===null) return;
+    const p = parseInt(n,10); if(p>=1 && p<=numPages) goToPage(p);
+  });
+
+  let scrollSyncTimer=null;
+  mainEl.addEventListener("scroll",()=>{ if(!pdfDoc) return; clearTimeout(scrollSyncTimer); scrollSyncTimer=setTimeout(()=>{ updatePageIndicator(); updateNavBar(); updateSelBar(); },60); });
+
+  function navMetrics(){
+    const trackH = Math.max(30, navBar.clientHeight - 6);
+    const ratio = Math.max(0.08, Math.min(1, mainEl.clientHeight / Math.max(1, mainEl.scrollHeight)));
+    const thumbH = Math.max(28, Math.round(ratio * trackH));
+    const maxScroll = Math.max(1, mainEl.scrollHeight - mainEl.clientHeight);
+    const pct = mainEl.scrollTop / maxScroll;
+    const maxTop = Math.max(0, trackH - thumbH);
+    return { trackH, thumbH, maxScroll, pct, maxTop };
+  }
+  function updateNavBar(){
+    if(!pdfDoc || navDragging) return;
+    const m = navMetrics();
+    navThumb.style.height = m.thumbH + "px";
+    navThumb.style.top = (3 + m.pct * m.maxTop) + "px";
+  }
+  function pageFromNavY(y){
+    const m = navMetrics();
+    const rect = navBar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (y - rect.top - 3) / Math.max(1, m.trackH)));
+    navThumb.style.top = (3 + pct * m.maxTop) + "px";
+    mainEl.scrollTop = pct * m.maxScroll;
+    updatePageIndicator();
+  }
+  navBar.addEventListener("pointerdown", e => {
+    if(!pdfDoc) return;
+    e.preventDefault(); e.stopPropagation();
+    try{ navBar.setPointerCapture(e.pointerId); }catch(_){}
+    navDragging = true; navBar.classList.add("dragging");
+    pageFromNavY(e.clientY);
+  });
+  navBar.addEventListener("pointermove", e => { if(!navDragging) return; pageFromNavY(e.clientY); });
+  function endNavDrag(){ if(!navDragging) return; navDragging = false; navBar.classList.remove("dragging"); updateNavBar(); }
+  navBar.addEventListener("pointerup", endNavDrag);
+  navBar.addEventListener("pointercancel", endNavDrag);
+
+  function captureScrollPos(){
+    const mr = mainEl.getBoundingClientRect();
+    let page = 1, frac = 0;
+    viewer.querySelectorAll(".page-wrap").forEach(w => {
+      const r = w.getBoundingClientRect();
+      if(r.top <= mr.top + 1){ page = parseInt(w.dataset.page,10); frac = Math.max(0, Math.min(1, (mr.top - r.top) / Math.max(1, r.height))); }
+    });
+    return { page, frac, sx: mainEl.scrollLeft / Math.max(1, mainEl.scrollWidth) };
+  }
+  function restoreScrollPos(pos){
+    if(!pos) return;
+    const w = viewer.querySelector('.page-wrap[data-page="'+pos.page+'"]');
+    if(!w) return;
+    const mr = mainEl.getBoundingClientRect();
+    const wr = w.getBoundingClientRect();
+    mainEl.scrollTop += (wr.top - mr.top) + pos.frac * wr.height;
+    mainEl.scrollLeft = pos.sx * mainEl.scrollWidth;
+  }
+  async function renderAllPages(keepPos){
+    if(!pdfDoc) return;
+    const savedPos = keepPos ? captureScrollPos() : null;
+    if(pageObserver) pageObserver.disconnect();
+    viewer.innerHTML = "";
+    renderedPages.clear();
+    const cw = Math.min(mainEl.clientWidth-60, 900);
+    const dpr = Math.min(3, Math.max(window.devicePixelRatio||1, 2));
+    for(let p=1; p<=numPages; p++){
+      const page = await pdfDoc.getPage(p);
+      const vp1 = page.getViewport({scale:1});
+      if(p===1) baseScale = cw/vp1.width;
+      const w = Math.round(vp1.width*baseScale*zoom);
+      const h = Math.round(vp1.height*baseScale*zoom);
+      const wrap = document.createElement("div");
+      wrap.className = "page-wrap"; wrap.dataset.page = p;
+      wrap.style.width = w+"px"; wrap.style.height = h+"px";
+      const ph = document.createElement("div");
+      ph.className = "page-ph"; ph.textContent = p+" / "+numPages;
+      wrap.appendChild(ph);
+      viewer.appendChild(wrap);
+      pageMeta[p] = { width:w, height:h, page:page, ptW:vp1.width, ptH:vp1.height, dpr:dpr };
+    }
+    restoreScrollPos(savedPos);
+    pageObserver = new IntersectionObserver(entries => {
+      for(const en of entries) if(en.isIntersecting){
+        const p = parseInt(en.target.dataset.page,10);
+        if(p && !renderedPages.has(p)) renderPageContent(p);
+      }
+    }, {root:mainEl, rootMargin:"500px 0px"});
+    viewer.querySelectorAll(".page-wrap").forEach(w => pageObserver.observe(w));
+    renderedZoom = zoom;
+    updateCanvasInteractivity();
+    updatePageIndicator();
+    updateNavBar();
+  }
+
+  async function renderPageContent(p){
+    if(renderedPages.has(p) || !pdfDoc) return;
+    const meta = pageMeta[p];
+    const wrap = viewer.querySelector('.page-wrap[data-page="'+p+'"]');
+    if(!meta || !wrap) return;
+    renderedPages.add(p);
+    try{
+      const scale = meta.width / meta.ptW;
+      const vp = meta.page.getViewport({scale});
+      let dpr = meta.dpr;
+      const MAX_PIX = 6000;
+      if(vp.width*dpr > MAX_PIX) dpr = MAX_PIX/vp.width;
+      if(vp.height*dpr > MAX_PIX) dpr = Math.min(dpr, MAX_PIX/vp.height);
+
+      const pdfCanvas = document.createElement("canvas");
+      pdfCanvas.className = "pdf-canvas";
+      pdfCanvas.width = Math.round(vp.width*dpr);
+      pdfCanvas.height = Math.round(vp.height*dpr);
+      pdfCanvas.style.width = meta.width+"px";
+      pdfCanvas.style.height = meta.height+"px";
+      const pctx = pdfCanvas.getContext("2d");
+      pctx.imageSmoothingEnabled = true;
+      pctx.imageSmoothingQuality = "high";
+      pctx.scale(dpr,dpr);
+      await meta.page.render({canvasContext:pctx, viewport:vp}).promise;
+
+      const inkCanvas = document.createElement("canvas");
+      inkCanvas.className = "ink-canvas";
+      inkCanvas.dataset.page = p;
+      inkCanvas.dataset.dpr = dpr;
+      inkCanvas.width = Math.round(vp.width*dpr);
+      inkCanvas.height = Math.round(vp.height*dpr);
+      inkCanvas.style.width = meta.width+"px";
+      inkCanvas.style.height = meta.height+"px";
+      const ictx = inkCanvas.getContext("2d");
+      ictx.scale(dpr,dpr);
+
+      const textLayerDiv = document.createElement("div");
+      textLayerDiv.className = "textLayer";
+      textLayerDiv.dataset.page = p;
+      textLayerDiv.style.width = meta.width+"px";
+      textLayerDiv.style.height = meta.height+"px";
+
+      const pnum = document.createElement("div");
+      pnum.className = "page-num mono";
+      pnum.textContent = p+" / "+numPages;
+
+      wrap.innerHTML = "";
+      wrap.appendChild(pdfCanvas);
+      wrap.appendChild(inkCanvas);
+      wrap.appendChild(textLayerDiv);
+      wrap.appendChild(pnum);
+
+      attachPointerEvents(inkCanvas, p);
+      drawPageStrokes(p);
+      updateCanvasInteractivity();
+
+      try{
+        const textContent = await meta.page.getTextContent();
+        pdfjsLib.renderTextLayer({
+          textContent: textContent,
+          container: textLayerDiv,
+          viewport: vp,
+          textDivs: []
+        }).promise.then(() => {
+          textLayerDiv.querySelectorAll("span").forEach(sp => sp.setAttribute("data-page", p));
+          updateCanvasInteractivity();
+        }).catch(err => console.warn("text layer err", err));
+      }catch(err){ console.warn("textContent err", p, err); }
+    }catch(err){
+      console.error("render page", p, err);
+      renderedPages.delete(p);
+    }
+  }
+
+  function pageScale(p){ return pageMeta[p].width / NORM_W; }
+  function r1(n){ return Math.round(n*10)/10; }
+  function toNorm(p, cx, cy, canvas){
+    const r = canvas.getBoundingClientRect();
+    const s = pageScale(p);
+    return {x: r1((cx-r.left)/s), y: r1((cy-r.top)/s)};
+  }
+  function getInkCanvas(p){ return viewer.querySelector('canvas.ink-canvas[data-page="'+p+'"]'); }
+  function ptCount(pts){ return (typeof pts[0] === "number") ? (pts.length/2) : pts.length; }
+  function ptAt(pts, i){ return (typeof pts[0] === "number") ? {x:pts[i*2], y:pts[i*2+1]} : pts[i]; }
+  function flattenPoints(pts){
+    const out = [];
+    for(const pt of pts){ out.push(r1(pt.x), r1(pt.y)); }
+    return out;
+  }
+
+  function drawStrokeOnCtx(ctx, stroke, scale){
+    const pts = stroke.points;
+    if(!pts || ptCount(pts) < 2) return;
+    const n = ptCount(pts);
+    const isHi = stroke.tool === "highlighter";
+    ctx.save();
+    ctx.globalAlpha = isHi ? (stroke.opacity ?? 0.38) : 1;
+    ctx.globalCompositeOperation = isHi ? "multiply" : "source-over";
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = Math.max(stroke.width*scale, 0.6);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    const p0 = ptAt(pts, 0);
+    ctx.moveTo(p0.x*scale, p0.y*scale);
+    for(let i=1; i<n; i++){ const pi = ptAt(pts, i); ctx.lineTo(pi.x*scale, pi.y*scale); }
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawLineShape(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function drawArrowShape(ctx, x1, y1, x2, y2, width){
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = Math.max(14, width * 4.5);
+    const headAng = Math.PI / 7;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const ax1 = x2 - headLen * Math.cos(a - headAng);
+    const ay1 = y2 - headLen * Math.sin(a - headAng);
+    const ax2 = x2 - headLen * Math.cos(a + headAng);
+    const ay2 = y2 - headLen * Math.sin(a + headAng);
+    ctx.beginPath(); ctx.moveTo(ax1, ay1); ctx.lineTo(x2, y2); ctx.lineTo(ax2, ay2); ctx.stroke();
+  }
+  function drawRectShape(ctx,x1,y1,x2,y2){
+    const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
+    ctx.beginPath(); ctx.rect(x,y,w,h); ctx.stroke();
+  }
+  function drawCircleShape(ctx,x1,y1,x2,y2){
+    const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2,ry=Math.abs(y2-y1)/2;
+    ctx.beginPath(); ctx.ellipse(cx,cy,Math.max(rx,2),Math.max(ry,2),0,0,Math.PI*2); ctx.stroke();
+  }
+  function drawPolygonShape(ctx,x1,y1,x2,y2){
+    const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2,ry=Math.abs(y2-y1)/2;
+    const n=6; ctx.beginPath();
+    for(let i=0;i<n;i++){ const a=-Math.PI/2+i*2*Math.PI/n; const px=cx+rx*Math.cos(a),py=cy+ry*Math.sin(a); if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+    ctx.closePath(); ctx.stroke();
+  }
+  function drawCloudShape(ctx, x1, y1, x2, y2){
+    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+    const rx = Math.abs(x2 - x1) / 2, ry = Math.abs(y2 - y1) / 2;
+    if(rx < 4 || ry < 4) return;
+    const nBumps = 10, bulge = 0.32;
+    const pt = (i) => { const a = (i / nBumps) * Math.PI * 2 - Math.PI / 2; return { a, x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) }; };
+    ctx.beginPath();
+    const p0 = pt(0); ctx.moveTo(p0.x, p0.y);
+    for(let i = 1; i <= nBumps; i++){
+      const pPrev = pt(i - 1), pCur = pt(i);
+      const midA = (pPrev.a + pCur.a) / 2;
+      const cpx = cx + rx * (1 + bulge) * Math.cos(midA);
+      const cpy = cy + ry * (1 + bulge) * Math.sin(midA);
+      ctx.quadraticCurveTo(cpx, cpy, pCur.x, pCur.y);
+    }
+    ctx.closePath(); ctx.stroke();
+  }
+  function drawCalloutShape(ctx,x1,y1,x2,y2){
+    const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
+    const tailW=Math.min(w,h)*0.25;
+    ctx.beginPath();
+    ctx.moveTo(x+10,y); ctx.lineTo(x+w-10,y); ctx.quadraticCurveTo(x+w,y,x+w,y+10);
+    ctx.lineTo(x+w,y+h-10); ctx.quadraticCurveTo(x+w,y+h,x+w-10,y+h);
+    const tailX=x+w*0.28;
+    ctx.lineTo(tailX+tailW*0.35,y+h); ctx.lineTo(tailX,y+h+tailW); ctx.lineTo(tailX-tailW*0.35,y+h);
+    ctx.lineTo(x+10,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-10);
+    ctx.lineTo(x,y+10); ctx.quadraticCurveTo(x,y,x+10,y);
+    ctx.closePath(); ctx.stroke();
+  }
+
+  // ✦ drawTextShape بيدعم RTL و LTR صح
+  function drawTextShape(ctx, anno, scale){
+    const fs = (anno.fontSize||24)*scale;
+    ctx.font = "600 "+fs+"px "+TEXT_FONT_FAMILY;
+    ctx.textBaseline = "top";
+    let dir = anno.dir;
+    if(dir !== "ltr" && dir !== "rtl" && dir !== "inherit"){
+      dir = isArabicText(anno.text) ? "rtl" : "ltr";
+    }
+    ctx.direction = dir;
+    ctx.textAlign = "start";
+    ctx.fillStyle = anno.color || "#000";
+    const lines = String(anno.text||"").split("\n");
+    const lh = fs*1.35;
+    const baseX = (anno.x||0) * scale;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, baseX, (anno.y||0) * scale + i*lh);
+    });
+  }
+  function drawTextHighlight(ctx, anno, scale){
+    ctx.save();
+    ctx.globalAlpha = anno.opacity ?? 0.42;
+    ctx.globalCompositeOperation = "multiply";
+    const padX = 2, padY = anno.h * 0.15;
+    const x = (anno.x - padX / scale) * scale;
+    const y = (anno.y - padY) * scale;
+    const w = (anno.w + (2 * padX) / scale) * scale;
+    const h = (anno.h + 2 * padY) * scale;
+    const r = Math.min(3 * scale, h / 3);
+    ctx.fillStyle = anno.color || "#FFE066";
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  const UNDERLINE_POS = 0.78; // مكان خط التسطير من ارتفاع الكلمة (0 = فوق، 1 = تحت خالص) — قلّله لو عايزه أعلى
+  function drawTextUnderline(ctx, anno, scale){
+    ctx.save(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = anno.color || "#1B2430";
+    ctx.lineWidth = Math.max((anno.lineWidth||2)*scale, 1);
+    ctx.beginPath();
+    const y = (anno.y + anno.h * UNDERLINE_POS) * scale;
+    ctx.moveTo(anno.x*scale, y); ctx.lineTo((anno.x+anno.w)*scale, y);
+    ctx.stroke(); ctx.restore();
+  }
+  function drawTextStrike(ctx, anno, scale){
+    ctx.save(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = anno.color || "#D1495B";
+    ctx.lineWidth = Math.max((anno.lineWidth||2)*scale, 1);
+    ctx.beginPath();
+    const y = (anno.y + anno.h*0.55) * scale;
+    ctx.moveTo(anno.x*scale, y); ctx.lineTo((anno.x+anno.w)*scale, y);
+    ctx.stroke(); ctx.restore();
+  }
+
+  function drawAnnotation(ctx, anno, scale){
+    const t = anno.tool;
+    ctx.save();
+    const isHi = t === "highlighter";
+    ctx.globalAlpha = isHi ? (anno.opacity ?? 0.38) : (anno.opacity ?? 1);
+    ctx.globalCompositeOperation = isHi ? "multiply" : "source-over";
+    ctx.strokeStyle = anno.color || "#000";
+    ctx.fillStyle = anno.color || "#000";
+    ctx.lineWidth = Math.max((anno.width||4)*scale, 0.6);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    switch(t){
+      case "pen": case "highlighter": ctx.restore(); drawStrokeOnCtx(ctx, anno, scale); return;
+      case "line": case "underline": case "strike": drawLineShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "arrow": drawArrowShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale, ctx.lineWidth); break;
+      case "rect": drawRectShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "circle": drawCircleShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "polygon": drawPolygonShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "cloud": drawCloudShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "callout": drawCalloutShape(ctx, anno.x1*scale, anno.y1*scale, anno.x2*scale, anno.y2*scale); break;
+      case "text": ctx.restore(); drawTextShape(ctx, anno, scale); return;
+      case "text-highlight": ctx.restore(); drawTextHighlight(ctx, anno, scale); return;
+      case "text-underline": ctx.restore(); drawTextUnderline(ctx, anno, scale); return;
+      case "text-strike": ctx.restore(); drawTextStrike(ctx, anno, scale); return;
+    }
+    ctx.restore();
+  }
+
+  function drawPageStrokes(p){
+    const canvas = getInkCanvas(p);
+    if(!canvas) return;
+    const dpr = canvasDpr(canvas);
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,canvas.width/dpr, canvas.height/dpr);
+    const scale = pageScale(p);
+    const list = strokesByPage[p] || [];
+    for(const s of list) drawAnnotation(ctx, s, scale);
+    ctx.restore();
+  }
+
+  function distToSegment(p,a,b){
+    const ax=a.x,ay=a.y,bx=b.x,by=b.y,px=p.x,py=p.y;
+    const abx=bx-ax,aby=by-ay;
+    const l2 = abx*abx+aby*aby;
+    let t = l2 ? ((px-ax)*abx+(py-ay)*aby)/l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px-(ax+t*abx), py-(ay+t*aby));
+  }
+  function strokeNear(stroke, pt, r){
+    if(stroke.tool === "text"){
+      const bb = getTextAnnotationBBox(stroke);
+      return pt.x >= bb.x - 10 && pt.x <= bb.x + bb.w + 10 &&
+             pt.y >= bb.y - 10 && pt.y <= bb.y + bb.h + 10;
+    }
+    if(stroke.tool === "text-highlight" || stroke.tool === "text-underline" || stroke.tool === "text-strike"){
+      return pt.x >= stroke.x - 5 && pt.x <= stroke.x + stroke.w + 5 &&
+             pt.y >= stroke.y - 5 && pt.y <= stroke.y + stroke.h + 5;
+    }
+    if(stroke.points){
+      const pts = stroke.points;
+      const n = ptCount(pts);
+      if(n === 0) return false;
+      if(n === 1){ const p0 = ptAt(pts,0); return Math.hypot(pt.x-p0.x, pt.y-p0.y)<r; }
+      for(let i=1;i<n;i++) if(distToSegment(pt, ptAt(pts,i-1), ptAt(pts,i))<r) return true;
+      return false;
+    }
+    if(typeof stroke.x1 === "number"){
+      return distToSegment(pt,{x:stroke.x1,y:stroke.y1},{x:stroke.x2,y:stroke.y2}) < r;
+    }
+    return false;
+  }
+  function findStrokeAt(p, pt, r){
+    const list = strokesByPage[p] || [];
+    for(let i=list.length-1;i>=0;i--){ if(strokeNear(list[i], pt, r)) return list[i]; }
+    return null;
+  }
+  function translateStroke(s, dx, dy){
+    if(s.points){
+      const pts = s.points;
+      if(typeof pts[0] === "number"){
+        for(let i=0;i<pts.length;i+=2){ pts[i] = r1(pts[i]+dx); pts[i+1] = r1(pts[i+1]+dy); }
+      } else {
+        for(const p of pts){ p.x = r1(p.x+dx); p.y = r1(p.y+dy); }
+      }
+    }
+    if(typeof s.x1 === "number"){ s.x1=r1(s.x1+dx); s.y1=r1(s.y1+dy); s.x2=r1(s.x2+dx); s.y2=r1(s.y2+dy); }
+    if((s.tool === "text" || s.tool === "text-highlight" || s.tool === "text-underline" || s.tool === "text-strike") && typeof s.x === "number"){
+      s.x = r1(s.x+dx); s.y = r1(s.y+dy);
+    }
+  }
+  function strokeBBox(s){
+    if(s.points){
+      const pts = s.points, n = ptCount(pts);
+      if(!n) return null;
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for(let i=0;i<n;i++){ const p = ptAt(pts,i); minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y); }
+      const pad = (s.width||4)/2;
+      return {x:minX-pad, y:minY-pad, w:maxX-minX+pad*2, h:maxY-minY+pad*2};
+    }
+    if(typeof s.x1 === "number"){
+      const pad = (s.width||4)/2;
+      return {x:Math.min(s.x1,s.x2)-pad, y:Math.min(s.y1,s.y2)-pad, w:Math.abs(s.x2-s.x1)+pad*2, h:Math.abs(s.y2-s.y1)+pad*2};
+    }
+    if(s.tool === "text") return getTextAnnotationBBox(s);
+    if(typeof s.x === "number") return {x:s.x, y:s.y, w:s.w||100, h:s.h||24};
+    return null;
+  }
+
+  function selectAnnotation(stroke, page){
+    selectedAnno = { stroke, page };
+    buildSelColorRack();
+    const t = stroke.tool;
+
+    const opEl = document.getElementById("opRange");
+    const opLbl = document.getElementById("opLabel");
+    if(opEl && opLbl){
+      if(t === "highlighter"){
+        opEl.style.display = "inline-block";
+        opLbl.style.display = "inline";
+        opEl.value = Math.round((stroke.opacity ?? 0.38) * 100);
+      } else {
+        opEl.style.display = "none";
+        opLbl.style.display = "none";
+      }
+    }
+
+    if(t === "text"){
+      selWidth.min = 10; selWidth.max = 80;
+      selWidth.value = stroke.fontSize || 24;
+      if(selWidthHint) selWidthHint.textContent = "الحجم";
+    } else if(t === "text-highlight"){
+      selWidth.min = 10; selWidth.max = 100;
+      selWidth.value = Math.round((stroke.opacity ?? 0.42) * 100);
+      if(selWidthHint) selWidthHint.textContent = "الشفافية";
+    } else if(t === "text-underline" || t === "text-strike"){
+      selWidth.min = 1; selWidth.max = 10;
+      selWidth.value = stroke.lineWidth || 2;
+      if(selWidthHint) selWidthHint.textContent = "السُمك";
+    } else if(t === "highlighter"){
+      selWidth.min = 4; selWidth.max = 60;
+      selWidth.value = stroke.width || 20;
+      if(selWidthHint) selWidthHint.textContent = "السُمك";
+    } else {
+      selWidth.min = 1; selWidth.max = 40;
+      selWidth.value = stroke.width || 4;
+      if(selWidthHint) selWidthHint.textContent = "السُمك";
+    }
+    updateSelBar();
+  }
+  function deselectAnnotation(){
+    if(!selectedAnno){
+      const opEl = document.getElementById("opRange");
+      const opLbl = document.getElementById("opLabel");
+      if(opEl && opLbl && currentTool !== "highlighter"){
+        opEl.style.display = "none";
+        opLbl.style.display = "none";
+      }
+      return;
+    }
+    selectedAnno = null;
+    selBar.classList.remove("show");
+    const opEl = document.getElementById("opRange");
+    const opLbl = document.getElementById("opLabel");
+    if(opEl && opLbl && currentTool !== "highlighter"){
+      opEl.style.display = "none";
+      opLbl.style.display = "none";
+    }
+  }
+  function updateSelBar(){
+    if(!selectedAnno || !pdfDoc){ selBar.classList.remove("show"); return; }
+    const { stroke, page } = selectedAnno;
+    const wrap = viewer.querySelector('.page-wrap[data-page="'+page+'"]');
+    if(!wrap){ selBar.classList.remove("show"); return; }
+    const bb = strokeBBox(stroke);
+    if(!bb){ selBar.classList.remove("show"); return; }
+    const rect = wrap.getBoundingClientRect();
+    const scale = pageMeta[page].width / NORM_W;
+    const left = rect.left + bb.x * scale;
+    const top  = rect.top  + bb.y * scale;
+    const bottom = rect.top + (bb.y + bb.h) * scale;
+    selBar.classList.add("show");
+    const sbRect = selBar.getBoundingClientRect();
+    let px = left;
+    let py = top - sbRect.height - 10;
+    if(py < 8) py = bottom + 10;
+    px = Math.max(8, Math.min(window.innerWidth - sbRect.width - 8, px));
+    py = Math.max(8, Math.min(window.innerHeight - sbRect.height - 8, py));
+    selBar.style.left = px + "px";
+    selBar.style.top  = py + "px";
+  }
+  function buildSelColorRack(){
+    selColorRack.innerHTML = "";
+    if(!selectedAnno) return;
+    const t = selectedAnno.stroke.tool;
+    const isHi = (t === "highlighter" || t === "text-highlight");
+    const colors = isHi ? HI_COLORS : PEN_COLORS;
+    const cur = String(selectedAnno.stroke.color||"").toLowerCase();
+    colors.forEach(c => {
+      const el = document.createElement("span");
+      el.className = "sel-pen"; el.style.background = c; el.title = c;
+      if(cur === c.toLowerCase()) el.classList.add("selected");
+      el.addEventListener("click", () => {
+        if(!selectedAnno) return;
+        selectedAnno.stroke.color = c;
+        drawPageStrokes(selectedAnno.page);
+        buildSelColorRack(); scheduleSave();
+      });
+      selColorRack.appendChild(el);
+    });
+    const picker = document.createElement("input");
+    picker.type = "color";
+    picker.value = /^#[0-9a-f]{6}$/i.test(selectedAnno.stroke.color||"") ? selectedAnno.stroke.color : "#000000";
+    picker.style.cssText = "width:24px;height:24px;padding:0;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:transparent;cursor:pointer;flex:none;";
+    picker.addEventListener("input", e => {
+      if(!selectedAnno) return;
+      selectedAnno.stroke.color = e.target.value;
+      drawPageStrokes(selectedAnno.page); scheduleSave();
+    });
+    picker.addEventListener("change", e => { saveCustomColor(e.target.value); refreshCustomColors(); });
+    selColorRack.appendChild(picker);
+  }
+  selWidth.addEventListener("input", () => {
+    if(!selectedAnno) return;
+    const v = parseInt(selWidth.value, 10);
+    const t = selectedAnno.stroke.tool;
+    if(t === "text"){
+      selectedAnno.stroke.fontSize = v;
+      selectedAnno.stroke.width = 1;
+      rewrapTextAnnotation(selectedAnno.stroke);
+    } else if(t === "text-highlight"){
+      selectedAnno.stroke.opacity = v / 100;
+    } else if(t === "text-underline" || t === "text-strike"){
+      selectedAnno.stroke.lineWidth = v;
+    } else {
+      selectedAnno.stroke.width = v;
+    }
+    drawPageStrokes(selectedAnno.page);
+    updateSelBar();
+    scheduleSave();
+  });
+  $("#selDelete").addEventListener("click", () => {
+    if(!selectedAnno) return;
+    const { stroke, page } = selectedAnno;
+    const list = strokesByPage[page] || [];
+    const idx = list.indexOf(stroke);
+    if(idx >= 0){
+      list.splice(idx, 1);
+      redoByPage[page] = [];
+      drawPageStrokes(page); scheduleSave();
+      toast("تم حذف العنصر ✓");
+    }
+    deselectAnnotation();
+  });
+
+  function attachPointerEvents(canvas, p){
+    canvas.addEventListener("pointerdown", e => {
+      if(currentTool === "select"){
+        e.preventDefault(); e.stopPropagation();
+        const pt = toNorm(p, e.clientX, e.clientY, canvas);
+        const hit = findStrokeAt(p, pt, 12);
+        if(hit){
+          selectAnnotation(hit, p);
+          annoDragState = { stroke: hit, page: p, lastPt: pt, moved: false };
+        } else {
+          deselectAnnotation();
+          panState = {x:e.clientX, y:e.clientY, sl:mainEl.scrollLeft, st:mainEl.scrollTop};
+          mainEl.classList.add("grabbing");
+        }
+        try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+        return;
+      }
+      e.preventDefault(); e.stopPropagation();
+      try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+      const pt = toNorm(p, e.clientX, e.clientY, canvas);
+      activePageNum = p;
+      if(currentTool === "eraser"){ drawing = true; eraseAt(p, pt); return; }
+      if(currentTool === "text"){ openTextInput(p, pt, e.clientX, e.clientY); return; }
+      if(currentTool === "pen" || currentTool === "highlighter"){
+        drawing = true;
+        activeStroke = {
+          tool: currentTool, color: currentColor,
+          width: currentTool==="highlighter"?Math.max(currentWidth,12):currentWidth,
+          opacity: currentTool==="highlighter"?currentHiOpacity:1,
+          points: [pt]
+        };
+        return;
+      }
+      if(["line","arrow","rect","circle","polygon","cloud","callout"].includes(currentTool)){
+        drawing = true;
+        activeStroke = { tool: currentTool, color: currentColor, width: currentWidth, opacity: 1, x1:pt.x, y1:pt.y, x2:pt.x, y2:pt.y };
+      }
+    });
+    canvas.addEventListener("pointermove", e => {
+      if(currentTool === "select"){
+        if(annoDragState) return;
+        if(!panState){
+          const pt = toNorm(p, e.clientX, e.clientY, canvas);
+          const hit = findStrokeAt(p, pt, 12);
+          canvas.style.cursor = hit ? "move" : "grab";
+        }
+        return;
+      }
+      if(!drawing || activePageNum !== p) return;
+      const pt = toNorm(p, e.clientX, e.clientY, canvas);
+      if(currentTool === "eraser"){ eraseAt(p, pt); return; }
+      if(currentTool === "pen" || currentTool === "highlighter"){
+        if(!activeStroke) return;
+        activeStroke.points.push(pt);
+        const ctx = canvas.getContext("2d");
+        const dpr = canvasDpr(canvas);
+        ctx.save(); ctx.setTransform(dpr,0,0,dpr,0,0);
+        const scale = pageScale(p);
+        const n = activeStroke.points.length;
+        drawAnnotation(ctx, {tool:activeStroke.tool,color:activeStroke.color,width:activeStroke.width,opacity:activeStroke.opacity,points:activeStroke.points.slice(Math.max(0,n-2))}, scale);
+        ctx.restore();
+        return;
+      }
+      if(["line","arrow","rect","circle","polygon","cloud","callout"].includes(currentTool)){
+        activeStroke.x2 = pt.x; activeStroke.y2 = pt.y;
+        drawPageStrokes(p);
+        const ctx = canvas.getContext("2d");
+        const dpr = canvasDpr(canvas);
+        ctx.save(); ctx.setTransform(dpr,0,0,dpr,0,0);
+        drawAnnotation(ctx, activeStroke, pageScale(p));
+        ctx.restore();
+      }
+    });
+    function endStroke(){
+      if(currentTool === "select") return;
+      if(!drawing || activePageNum !== p) return;
+      drawing = false;
+      if(currentTool === "eraser"){ activeStroke=null; return; }
+      if(currentTool === "pen" || currentTool === "highlighter"){
+        if(activeStroke && activeStroke.points.length>1){
+          strokesByPage[p] = strokesByPage[p] || [];
+          strokesByPage[p].push({
+            tool: activeStroke.tool, color: activeStroke.color,
+            width: r1(activeStroke.width), opacity: activeStroke.opacity,
+            points: flattenPoints(activeStroke.points)
+          });
+          redoByPage[p] = []; drawPageStrokes(p); scheduleSave();
+        }
+      } else if(["line","arrow","rect","circle","polygon","cloud","callout"].includes(currentTool)){
+        const a = activeStroke;
+        if(a && Math.hypot(a.x2-a.x1, a.y2-a.y1) > 4){
+          a.width = r1(a.width);
+          strokesByPage[p] = strokesByPage[p] || [];
+          strokesByPage[p].push(a);
+          redoByPage[p] = []; drawPageStrokes(p); scheduleSave();
+        }
+      }
+      activeStroke = null;
+    }
+    canvas.addEventListener("pointerup", endStroke);
+    canvas.addEventListener("pointercancel", endStroke);
+    canvas.addEventListener("pointerleave", e => { if(e.buttons === 0) endStroke(); });
+  }
+
+  function eraseAt(p, pt){
+    const list = strokesByPage[p] || [];
+    const R = Math.max(8, currentWidth);
+    let changed = false;
+    const out = [];
+    for(const s of list){
+      if(s.points && (s.tool === "pen" || s.tool === "highlighter")){
+        const pts = s.points;
+        const n = ptCount(pts);
+        if(n === 0){ out.push(s); continue; }
+        const segs = [];
+        let cur = [];
+        let removed = false;
+        for(let i=0;i<n;i++){
+          const pp = ptAt(pts, i);
+          if(Math.hypot(pp.x - pt.x, pp.y - pt.y) < R){
+            removed = true;
+            if(cur.length > 1) segs.push(cur);
+            cur = [];
+          } else { cur.push({x: pp.x, y: pp.y}); }
+        }
+        if(cur.length > 1) segs.push(cur);
+        if(!removed){ out.push(s); continue; }
+        changed = true;
+        for(const seg of segs){
+          out.push({ tool: s.tool, color: s.color, width: s.width, opacity: s.opacity, points: flattenPoints(seg) });
+        }
+      } else {
+        if(strokeNear(s, pt, R)){ changed = true; }
+        else out.push(s);
+      }
+    }
+    if(changed){
+      strokesByPage[p] = out;
+      redoByPage[p] = [];
+      drawPageStrokes(p);
+      scheduleSave();
+    }
+  }
+
+  ctxMenu = $("#pdfCtxMenu");
+  function updateMarkupChecks(){
+    document.querySelectorAll("#pdfCtxMenu .ctx-item[data-markup]").forEach(el => {
+      el.classList.toggle("active-markup", el.dataset.markup === currentMarkupMode);
+    });
+  }
+  let ctxShownAt = 0, ctxColorChosen = false;
+  function showContextMenu(x, y){
+    ctxShownAt = Date.now(); ctxColorChosen = false;
+    ctxMenu.classList.add("show");
+    updateMarkupChecks();
+    const rect = ctxMenu.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    let left = x, top = y;
+    if(left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    if(top + h > window.innerHeight - 8) top = y - h;
+    if(top < 8) top = 8;
+    if(left < 8) left = 8;
+    ctxMenu.style.left = left + "px";
+    ctxMenu.style.top = top + "px";
+  }
+  function hideContextMenu(){ ctxMenu.classList.remove("show"); ctxMenu.querySelectorAll(".ctx-has-ai,.ctx-has-submenu").forEach(a => a.classList.remove("open")); }
+
+  mainEl.addEventListener("contextmenu", e => {
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const cont = range.commonAncestorContainer;
+    const el = cont.nodeType === 1 ? cont : cont.parentElement;
+    if(!el || !el.closest(".textLayer")) return;
+    e.preventDefault();
+    selectedRange = range.cloneRange();
+    showContextMenu(e.clientX, e.clientY);
+  });
+
+  function tryAutoApplyTextMark(){
+    if(!["highlighter","underline","strike"].includes(currentTool)) return;
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const cont = range.commonAncestorContainer;
+    const el = cont.nodeType === 1 ? cont : cont.parentElement;
+    if(!el || !el.closest(".textLayer")) return;
+    selectedRange = range.cloneRange();
+    const type = currentTool === "highlighter" ? "text-highlight" : (currentTool === "underline" ? "text-underline" : "text-strike");
+    applyTextMark(type, currentColor, currentWidth);
+  }
+  document.addEventListener("mouseup", tryAutoApplyTextMark);
+  document.addEventListener("touchend", () => setTimeout(tryAutoApplyTextMark, 0));
+
+  document.addEventListener("pointerdown", e => { if(!e.target.closest("#pdfCtxMenu")) hideContextMenu(); }, true);
+
+  ctxMenu.addEventListener("click", e => {
+    // تجاهل اللمسة الأولى اللي فتحت القائمة (كانت بتنفّذ أول عنصر تحت الإصبع)
+    if(Date.now() - ctxShownAt < 450){ e.preventDefault(); e.stopPropagation(); return; }
+    const sw = e.target.closest(".ctx-swatches .sw");
+    if(sw){
+      e.preventDefault(); e.stopPropagation();
+      ctxHighlightColor = sw.dataset.color;
+      document.querySelectorAll("#highlightSwatches .sw").forEach(x => { x.classList.toggle("selected", x === sw); });
+      ctxColorChosen = true; // اختيار اللون فقط — التنفيذ عند الضغط على نوع التظليل
+      return;
+    }
+    const item = e.target.closest("[data-act]");
+    if(!item || !selectedRange) return;
+    handleCtxAction(item.dataset.act);
+  });
+
+  function copyTextSync(t){
+    let ok = false;
+    try{
+      const ta = document.createElement("textarea");
+      ta.value = t;
+      ta.setAttribute("readonly","");
+      ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+    }catch(e){ ok = false; }
+    if(!ok){
+      try{ if(navigator.clipboard) { navigator.clipboard.writeText(t); ok = true; } }catch(e){}
+    }
+    return ok;
+  }
+
+  function handleCtxAction(act){
+    if(!selectedRange) return;
+    const text = selectedRange.toString();
+    switch(act){
+      case "copy":
+        navigator.clipboard.writeText(text).then(()=>toast("تم نسخ النص ✓"), ()=>toast("تعذّر النسخ"));
+        hideContextMenu(); break;
+      case "comment": {
+        const cont = selectedRange.commonAncestorContainer;
+        const el = cont.nodeType === 1 ? cont : cont.parentElement;
+        const textLayer = el.closest(".textLayer");
+        if(!textLayer) return;
+        const p = parseInt(textLayer.dataset.page, 10);
+        const pageWrap = textLayer.closest(".page-wrap");
+        const pwRect = pageWrap.getBoundingClientRect();
+        const scale = pageScale(p);
+        const rects = Array.from(selectedRange.getClientRects());
+        if(!rects.length) return;
+        const r = rects[0];
+        pendingInsertText = text;
+        openTextInput(p, {x:(r.left - pwRect.left) / scale, y:(r.top - pwRect.top) / scale}, r.left, r.top);
+        hideContextMenu(); break;
+      }
+      case "search":
+        window.open("https://www.google.com/search?q=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+        hideContextMenu(); break;
+      case "search-youtube":
+        window.open("https://www.youtube.com/results?search_query=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+        hideContextMenu(); break;
+      case "ai-menu": {
+        const box = ctxMenu.querySelector(".ctx-has-ai");
+        box.classList.toggle("open");
+        // بعد الفتح: ارفع القائمة لو نزلت تحت الشاشة، وانزل بالسكرول للأسماء
+        const r = ctxMenu.getBoundingClientRect();
+        if(r.bottom > window.innerHeight - 8){
+          ctxMenu.style.top = Math.max(8, window.innerHeight - 8 - r.height) + "px";
+        }
+        if(box.classList.contains("open")){
+          const list = box.querySelector(".ctx-aimenu");
+          setTimeout(() => { try{ list.scrollIntoView({block:"nearest"}); }catch(e){} }, 0);
+        }
+        break;
+      }
+      case "ai-claude": case "ai-chatgpt": case "ai-gemini": case "ai-glm": case "ai-deepseek": case "ai-kimi": {
+        const prompt = (window.aiPromptText ? window.aiPromptText() : "اشرح لي هذا النص:") + "\n\n" + text;
+        const q = encodeURIComponent(prompt);
+        const urls = {
+          "ai-claude":  "https://claude.ai/new?q=" + q,
+          "ai-chatgpt": "https://chatgpt.com/?q=" + q,
+          "ai-gemini":  "https://gemini.google.com/app",
+          "ai-glm":     "https://chat.z.ai/",
+          "ai-deepseek":"https://chat.deepseek.com/",
+          "ai-kimi":    "https://www.kimi.com/"
+        };
+        // النسخ بيتم الأول وبشكل متزامن (قبل فتح التبويب) عشان المتصفح ما يرفضوش
+        const copied = copyTextSync(prompt);
+        window.open(urls[act], "_blank", "noopener,noreferrer");
+        const direct = (act === "ai-claude" || act === "ai-chatgpt");
+        if(direct) toast("تم إرسال النص للشات ✓");
+        else if(copied) toast("تم نسخ النص ✓ — تقدر تلصقه في الشات (Ctrl+V)");
+        else toast("تعذّر النسخ التلقائي — ممكن تحدد النص وتنسخه بـ Ctrl+C");
+        hideContextMenu(); break;
+      }
+      case "highlight": {
+        // على الموبايل: الضغط يفتح ألوان التظليل داخل القائمة، واختيار لون يطبّق التظليل
+        if(true){
+          const hb = ctxMenu.querySelector(".ctx-has-submenu");
+          hb.classList.toggle("open");
+          const hr = ctxMenu.getBoundingClientRect();
+          if(hr.bottom > window.innerHeight - 8) ctxMenu.style.top = Math.max(8, window.innerHeight - 8 - hr.height) + "px";
+          if(hb.classList.contains("open")) setTimeout(() => { try{ hb.querySelector(".ctx-swatches").scrollIntoView({block:"nearest"}); }catch(e){} }, 0);
+        } else applyTextMark("text-highlight", ctxHighlightColor);
+        break;
+      }
+      case "highlight-apply": applyTextMark("text-highlight", ctxHighlightColor); break;
+      case "underline": applyTextMark("text-underline", ctxColorChosen ? ctxHighlightColor : undefined); break;
+      case "strike": applyTextMark("text-strike", ctxColorChosen ? ctxHighlightColor : undefined); break;
+      case "translate": {
+        $("#tpInput").value = text;
+        const isArabic = isArabicText(text);
+        $("#tpFrom").value = isArabic ? "ar" : "en";
+        $("#tpTo").value = isArabic ? "en" : "ar";
+        translatePanel.classList.add("show");
+        hideContextMenu();
+        setTimeout(runTranslate, 150);
+        break;
+      }
+    }
+  }
+
+  function applyTextMark(type, overrideColor, overrideWidth){
+    if(!selectedRange) return;
+    currentMarkupMode = type;
+    const cont = selectedRange.commonAncestorContainer;
+    const el = cont.nodeType === 1 ? cont : cont.parentElement;
+    const textLayer = el.closest(".textLayer");
+    if(!textLayer) return;
+    const p = parseInt(textLayer.dataset.page, 10);
+    const pageWrap = textLayer.closest(".page-wrap");
+    const pwRect = pageWrap.getBoundingClientRect();
+    const scale = pageScale(p);
+    const rects = Array.from(selectedRange.getClientRects()).filter(r => r.width > 2 && r.height > 2);
+    if(!rects.length){ hideContextMenu(); return; }
+    const newAnnos = [];
+    for(const r of rects){
+      const padX = 2, padY = r.height * 0.12;
+      const anno = {
+        tool: type,
+        x: r1((r.left - pwRect.left) / scale - padX / scale),
+        y: r1((r.top - pwRect.top) / scale - padY / scale),
+        w: r1(r.width / scale + (2 * padX) / scale),
+        h: r1(r.height / scale + (2 * padY) / scale)
+      };
+      if(type === "text-highlight"){ anno.color = overrideColor || ctxHighlightColor || "#FFE066"; anno.opacity = 0.42; }
+      else if(type === "text-underline"){ anno.color = overrideColor || "#1B2430"; anno.lineWidth = overrideWidth || 2; }
+      else { anno.color = overrideColor || "#D1495B"; anno.lineWidth = overrideWidth || 2; }
+      newAnnos.push(anno);
+    }
+    strokesByPage[p] = strokesByPage[p] || [];
+    strokesByPage[p].push(...newAnnos);
+    redoByPage[p] = [];
+    drawPageStrokes(p); scheduleSave();
+    try{ window.getSelection().removeAllRanges(); }catch(e){}
+    hideContextMenu();
+    const msgs = { "text-highlight": "تم التظليل ✓", "text-underline": "تم التسطير ✓", "text-strike": "تم الشطب ✓" };
+    toast(msgs[type] || "تم");
+  }
+
+  let textInputCtx = null;
+  function openTextInput(p, pt, clientX, clientY, editingStroke){
+    textInputCtx = { p: p, pt: pt, editingStroke: editingStroke || null };
+    textInputBox.style.display = "block";
+    textInputBox.classList.toggle("editing", !!editingStroke);
+    const boxW = 340;
+    let left = clientX, top = clientY;
+    if(left + boxW > window.innerWidth - 10) left = window.innerWidth - boxW - 10;
+    if(left < 10) left = 10;
+    if(top + 320 > window.innerHeight - 10) top = window.innerHeight - 330;
+    if(top < 10) top = 10;
+    textInputBox.style.left = left + "px";
+    textInputBox.style.top = top + "px";
+    if(editingStroke){
+      tiTextarea.value = editingStroke.origText != null ? editingStroke.origText : (editingStroke.text || "");
+      currentTextDir = editingStroke.dir || "auto";
+      currentFontSize = editingStroke.fontSize || 24;
+      currentColor = editingStroke.color || "#1B2430";
+      if(editingStroke.maxWidth && editingStroke.maxWidth > 20){
+        currentTextMaxWidth = editingStroke.maxWidth;
+        currentTextMaxWidthAuto = false;
+      } else {
+        currentTextMaxWidthAuto = true;
+        const effDir = (currentTextDir === "ltr" || currentTextDir === "rtl") ? currentTextDir : (isArabicText(tiTextarea.value) ? "rtl" : "ltr");
+        currentTextMaxWidth = computeAvailWidth(editingStroke.x, effDir, null);
+      }
+      fontRange.value = currentFontSize;
+      $("#tiOk").textContent = "تحديث";
+      $("#tiDelete").style.display = "inline-block";
+    } else {
+      tiTextarea.value = pendingInsertText || "";
+      pendingInsertText = null;
+      if(!tiTextarea.value){ currentTextDir = "auto"; }
+      else { currentTextDir = isArabicText(tiTextarea.value) ? "rtl" : "ltr"; }
+      currentTextMaxWidthAuto = true;
+      const effDir = (currentTextDir === "ltr" || currentTextDir === "rtl") ? currentTextDir : (isArabicText(tiTextarea.value) ? "rtl" : "ltr");
+      currentTextMaxWidth = computeAvailWidth(pt.x, effDir, null);
+      $("#tiOk").textContent = "إضافة";
+      $("#tiDelete").style.display = "none";
+    }
+    const twr = $("#tiWidthRange"), twv = $("#tiWidthVal");
+    if(twr){ twr.value = Math.round(currentTextMaxWidth); }
+    if(twv){ twv.textContent = Math.round(currentTextMaxWidth); }
+
+    tiTextarea.style.direction = currentTextDir === "rtl" ? "rtl" : "ltr";
+    tiTextarea.style.fontSize = Math.max(12, Math.min(48, currentFontSize)) + "px";
+    setTimeout(() => { tiTextarea.focus(); try{ tiTextarea.setSelectionRange(tiTextarea.value.length, tiTextarea.value.length); }catch(e){} }, 50);
+    document.querySelectorAll("#textInputBox .ti-dir button").forEach(b => b.classList.toggle("active", b.dataset.dir === currentTextDir));
+  }
+  function openTextInputForEdit(stroke, p, clientX, clientY){
+    const wrap = viewer.querySelector('.page-wrap[data-page="'+p+'"]');
+    if(!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const scale = pageMeta[p].width / NORM_W;
+    openTextInput(p, {x: stroke.x, y: stroke.y}, rect.left + stroke.x * scale, rect.top + stroke.y * scale, stroke);
+  }
+  function deleteEditingStroke(){
+    if(!textInputCtx || !textInputCtx.editingStroke) return;
+    const p = textInputCtx.p;
+    const list = strokesByPage[p] || [];
+    const idx = list.indexOf(textInputCtx.editingStroke);
+    if(idx >= 0){ list.splice(idx, 1); redoByPage[p] = []; drawPageStrokes(p); scheduleSave(); toast("تم حذف النص"); }
+    textInputBox.style.display = "none";
+    textInputBox.classList.remove("editing");
+    textInputCtx = null;
+  }
+
+  /* ====================================================================
+     ✦ لفّ النص — قياس حقيقي بـ canvas.measureText
+     ✦ يحسب المساحة المتاحة حسب اتجاه النص (RTL: يمتد لليسار / LTR: لليمين)
+     ✦ يدعم عرضًا يدويًا عبر maxWidthOverride (بالوحدات الافتراضية NORM_W)
+     ==================================================================== */
+
+  let _measureCanvas = null;
+  let _measureCtx = null;
+  function getMeasureCtx(fontSize){
+    if(!_measureCanvas){
+      _measureCanvas = document.createElement('canvas');
+      _measureCtx = _measureCanvas.getContext('2d');
+    }
+    _measureCtx.font = "600 " + fontSize + "px " + TEXT_FONT_FAMILY;
+    return _measureCtx;
+  }
+
+  function computeAvailWidth(x, dir, maxWidthOverride){
+    if(maxWidthOverride && maxWidthOverride > 20){
+      return Math.max(80, Math.min(NORM_W - 20, maxWidthOverride));
+    }
+    const startX = Math.max(0, Number(x) || 0);
+    if(dir === "rtl"){
+      return Math.max(150, startX - 28);
+    }
+    return Math.max(150, NORM_W - startX - 28);
+  }
+
+  function wrapTextForAnnotation(text, x, fontSize, dir, maxWidthOverride){
+    const fs = Math.max(8, Number(fontSize) || 24);
+    const availW = computeAvailWidth(x, dir, maxWidthOverride);
+
+    const mctx = getMeasureCtx(fs);
+    const measure = function(s){ return mctx.measureText(s).width; };
+
+    const out = [];
+    const srcLines = String(text == null ? "" : text).split(/\r?\n/);
+    for(const line of srcLines){
+      if(line === ""){ out.push(""); continue; }
+      if(measure(line) <= availW){ out.push(line); continue; }
+
+      const words = line.split(/\s+/).filter(Boolean);
+      if(!words.length){ out.push(""); continue; }
+
+      let cur = "";
+      for(const w of words){
+        if(measure(w) > availW){
+          if(cur){ out.push(cur); cur = ""; }
+          let chunk = "";
+          for(const ch of w){
+            if(chunk && measure(chunk + ch) > availW){
+              out.push(chunk);
+              chunk = ch;
+            } else {
+              chunk += ch;
+            }
+          }
+          if(chunk) cur = chunk;
+          continue;
+        }
+        if(!cur){
+          cur = w;
+        } else if(measure(cur + " " + w) <= availW){
+          cur += " " + w;
+        } else {
+          out.push(cur);
+          cur = w;
+        }
+      }
+      if(cur) out.push(cur);
+    }
+    return out.join("\n");
+  }
+
+  function wrapPlainText(text, x, fontSize){
+    return wrapTextForAnnotation(text, x, fontSize, "ltr", null);
+  }
+
+  function rewrapTextAnnotation(anno){
+    if(!anno || anno.tool !== "text") return;
+    const src = (anno.origText != null) ? anno.origText : anno.text;
+    anno.origText = src;
+    const dir = anno.dir || "auto";
+    const effDir = (dir === "ltr" || dir === "rtl") ? dir : (isArabicText(src) ? "rtl" : "ltr");
+    anno.text = wrapTextForAnnotation(src, anno.x, anno.fontSize, effDir, anno.maxWidth);
+  }
+
+  // ✦ closeTextInput: بعد الإضافة الناجحة ترجع تلقائيًا لأداة "تحديد / سحب"
+  //   ويعمل تحديد تلقائي للنص الجديد عشان تقدر تسحبه/تعدّل حجمه مباشرة
+  function closeTextInput(save){
+    if(!textInputCtx){ textInputBox.style.display = "none"; return; }
+    const txt = tiTextarea.value.trim();
+    const ctx = textInputCtx;
+    let didSave = false;
+    let newlyAdded = null;
+
+    if(save && ctx.editingStroke){
+      if(txt){
+        let finalDir = currentTextDir;
+        if(finalDir !== "ltr" && finalDir !== "rtl") finalDir = detectDir(txt);
+        ctx.editingStroke.origText = txt;
+        ctx.editingStroke.dir = finalDir;
+        ctx.editingStroke.fontSize = currentFontSize;
+        ctx.editingStroke.color = currentColor;
+        ctx.editingStroke.maxWidth = currentTextMaxWidthAuto ? null : currentTextMaxWidth;
+        ctx.editingStroke.text = wrapTextForAnnotation(txt, ctx.editingStroke.x, currentFontSize, finalDir, ctx.editingStroke.maxWidth);
+        redoByPage[ctx.p] = []; drawPageStrokes(ctx.p); scheduleSave();
+        toast("تم تحديث النص ✓");
+        didSave = true;
+      } else {
+        const list = strokesByPage[ctx.p] || [];
+        const idx = list.indexOf(ctx.editingStroke);
+        if(idx >= 0){ list.splice(idx, 1); drawPageStrokes(ctx.p); scheduleSave(); }
+        toast("تم حذف النص");
+      }
+    } else if(save && txt){
+      let finalDir = currentTextDir;
+      if(finalDir !== "ltr" && finalDir !== "rtl") finalDir = detectDir(txt);
+      const mw = currentTextMaxWidthAuto ? null : currentTextMaxWidth;
+      const wrapped = wrapTextForAnnotation(txt, ctx.pt.x, currentFontSize, finalDir, mw);
+      const anno = {
+        tool:"text", color:currentColor, width:1,
+        fontSize:currentFontSize,
+        x:ctx.pt.x, y:ctx.pt.y,
+        text: wrapped,
+        origText: txt,
+        dir:finalDir,
+        maxWidth: mw
+      };
+      strokesByPage[ctx.p] = strokesByPage[ctx.p] || [];
+      strokesByPage[ctx.p].push(anno);
+      redoByPage[ctx.p] = []; drawPageStrokes(ctx.p); scheduleSave();
+      toast("تمت إضافة النص — يمكنك سحبه الآن");
+      didSave = true;
+      newlyAdded = { anno: anno, page: ctx.p };
+    }
+
+    textInputBox.style.display = "none";
+    textInputBox.classList.remove("editing");
+    textInputCtx = null;
+
+    // ✦ الرجوع لأداة "تحديد / سحب" بعد الإضافة أو التحديث
+    if(didSave && currentTool === "text"){
+      // نستدعي selectTool بدون المرور على closeTextInput مرة أخرى
+      // (textInputCtx = null بالفعل، فالخروج من closeTextInput فوري لو اتنادى)
+      selectTool("select");
+    }
+
+    // ✦ تحديد النص الجديد تلقائيًا لظهور شريط اللون/الحجم + إمكانية السحب المباشر
+    if(newlyAdded){
+      const { anno, page } = newlyAdded;
+      setTimeout(() => {
+        selectedAnno = { stroke: anno, page: page };
+        // تحديث شريط التحديد حسب نوع "النص"
+        if(selWidthHint) selWidthHint.textContent = "الحجم";
+        selWidth.min = 10; selWidth.max = 80;
+        selWidth.value = anno.fontSize || 24;
+        // شريط الشفافية يختفي للنص
+        const opEl = document.getElementById("opRange");
+        const opLbl = document.getElementById("opLabel");
+        if(opEl && opLbl){ opEl.style.display = "none"; opLbl.style.display = "none"; }
+        buildSelColorRack();
+        updateSelBar();
+      }, 60);
+    }
+  }
+
+  document.querySelectorAll("#textInputBox .ti-dir button").forEach(b => {
+    b.addEventListener("click", () => {
+      currentTextDir = b.dataset.dir;
+      tiTextarea.style.direction = currentTextDir === "rtl" ? "rtl" : "ltr";
+      if(currentTextMaxWidthAuto && textInputCtx){
+        const x = textInputCtx.editingStroke ? textInputCtx.editingStroke.x : textInputCtx.pt.x;
+        const w = computeAvailWidth(x, currentTextDir, null);
+        currentTextMaxWidth = w;
+        const twr = $("#tiWidthRange"), twv = $("#tiWidthVal");
+        if(twr) twr.value = Math.round(w);
+        if(twv) twv.textContent = Math.round(w);
+      }
+      document.querySelectorAll("#textInputBox .ti-dir button").forEach(x => x.classList.toggle("active", x.dataset.dir === currentTextDir));
+      tiTextarea.focus();
+    });
+  });
+  $("#tiCancel").addEventListener("click", () => closeTextInput(false));
+  $("#tiOk").addEventListener("click", () => closeTextInput(true));
+  $("#tiDelete").addEventListener("click", deleteEditingStroke);
+
+  const tiWidthRange = $("#tiWidthRange");
+  const tiWidthVal = $("#tiWidthVal");
+  const tiAutoWidth = $("#tiAutoWidth");
+  if(tiWidthRange){
+    tiWidthRange.addEventListener("input", () => {
+      currentTextMaxWidth = parseInt(tiWidthRange.value, 10);
+      currentTextMaxWidthAuto = false;
+      if(tiWidthVal) tiWidthVal.textContent = currentTextMaxWidth;
+    });
+  }
+  if(tiAutoWidth){
+    tiAutoWidth.addEventListener("click", () => {
+      currentTextMaxWidthAuto = true;
+      const x = textInputCtx ? (textInputCtx.editingStroke ? textInputCtx.editingStroke.x : textInputCtx.pt.x) : 500;
+      const txt = tiTextarea.value || "";
+      let d = currentTextDir;
+      if(d !== "ltr" && d !== "rtl") d = isArabicText(txt) ? "rtl" : "ltr";
+      const w = computeAvailWidth(x, d, null);
+      currentTextMaxWidth = w;
+      if(tiWidthRange) tiWidthRange.value = Math.round(w);
+      if(tiWidthVal) tiWidthVal.textContent = Math.round(w);
+      toast("عرض تلقائي: " + Math.round(w) + " وحدة");
+    });
+  }
+
+  tiTextarea.addEventListener("keydown", e => {
+    if(e.key === "Escape"){ e.preventDefault(); closeTextInput(false); }
+    if(e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); closeTextInput(true); }
+  });
+
+  let translationCache = {};
+  async function translateText(text, from, to){
+    if(!text.trim()) return "";
+    const key = from+"|"+to+"|"+text;
+    if(translationCache[key]) return translationCache[key];
+    try{
+      const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="+encodeURIComponent(from)+"&tl="+encodeURIComponent(to)+"&dt=t&q="+encodeURIComponent(text);
+      const res = await fetch(url);
+      if(res.ok){
+        const data = await res.json();
+        if(Array.isArray(data) && Array.isArray(data[0])){
+          const out = data[0].map(x => x[0]).filter(Boolean).join("");
+          if(out){ translationCache[key] = out; return out; }
+        }
+      }
+    }catch(e){}
+    try{
+      const url = "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+encodeURIComponent(from)+"|"+encodeURIComponent(to);
+      const res = await fetch(url);
+      const data = await res.json();
+      const out = data && data.responseData && data.responseData.translatedText;
+      if(out){ translationCache[key] = out; return out; }
+    }catch(e){}
+    throw new Error("تعذّر الاتصال");
+  }
+  $("#btnTranslate").addEventListener("click", () => {
+    translatePanel.classList.toggle("show");
+    if(translatePanel.classList.contains("show")) setTimeout(() => $("#tpInput").focus(), 100);
+  });
+  $("#tpClose").addEventListener("click", () => translatePanel.classList.remove("show"));
+  $("#tpSwap").addEventListener("click", () => {
+    const f = $("#tpFrom").value === "auto" ? "ar" : $("#tpFrom").value;
+    const t = $("#tpTo").value;
+    $("#tpFrom").value = t; $("#tpTo").value = f;
+    runTranslate();
+  });
+  $("#tpClear").addEventListener("click", () => { $("#tpInput").value = ""; $("#tpResult").textContent = "الترجمة ستظهر هنا…"; });
+  $("#tpCopy").addEventListener("click", async () => {
+    try{ await navigator.clipboard.writeText($("#tpResult").textContent); toast("تم النسخ ✓"); }catch(e){ toast("تعذّر"); }
+  });
+  $("#tpInsert").addEventListener("click", () => {
+    const txt = $("#tpResult").textContent;
+    if(!txt || txt === "الترجمة ستظهر هنا…"){ toast("لا يوجد نص"); return; }
+    selectTool("text");
+    currentTextDir = isArabicText(txt) ? "rtl" : "ltr";
+    pendingInsertText = txt;
+    translatePanel.classList.remove("show");
+    toast("اضغط على المكان في الصفحة");
+  });
+  async function runTranslate(){
+    const txt = $("#tpInput").value.trim();
+    const btn = $("#tpTranslate");
+    if(!txt){ $("#tpResult").textContent = "الترجمة ستظهر هنا…"; return; }
+    const from = $("#tpFrom").value, to = $("#tpTo").value;
+    btn.disabled = true; btn.textContent = "…";
+    $("#tpResult").textContent = "…";
+    try{ $("#tpResult").textContent = await translateText(txt, from, to); }
+    catch(e){ $("#tpResult").textContent = "⚠️ تعذّرت الترجمة"; }
+    finally{ btn.disabled = false; btn.textContent = "ترجم الآن"; }
+  }
+  let translateDebounce = null;
+  $("#tpInput").addEventListener("input", () => { clearTimeout(translateDebounce); translateDebounce = setTimeout(runTranslate, 500); });
+  $("#tpFrom").addEventListener("change", runTranslate);
+  $("#tpTo").addEventListener("change", runTranslate);
+  $("#tpTranslate").addEventListener("click", runTranslate);
+
+  function buildColorRack(){
+    colorRack.innerHTML = "";
+    const isHi = (currentTool === "highlighter");
+    const quick = isHi ? HI_COLORS : PEN_COLORS;
+    const picker = document.createElement("div");
+    picker.className = "color-picker-btn";
+    picker.title = "🎨 منتقي الألوان";
+    picker.style.color = currentColor;
+    picker.innerHTML = '<div class="c-swatch"></div><span class="c-icon">🎨</span><input type="color" value="'+escapeHtml(currentColor)+'">';
+    const inp = picker.querySelector('input');
+    inp.addEventListener("input", e => { currentColor = e.target.value; picker.style.color = currentColor; updateSelectedPen(); });
+    inp.addEventListener("change", e => { currentColor = e.target.value; picker.style.color = currentColor; saveCustomColor(currentColor); refreshCustomColors(); updateSelectedPen(); });
+    colorRack.appendChild(picker);
+    const sep = document.createElement("span");
+    sep.style.cssText = "width:1px;height:20px;background:rgba(255,255,255,.15);flex:none;margin:0 2px;";
+    colorRack.appendChild(sep);
+    quick.forEach(c => {
+      const el = document.createElement("span");
+      el.className = "pen"; el.style.background = c; el.title = c; el.dataset.color = c;
+      if(String(c).toLowerCase() === String(currentColor).toLowerCase()) el.classList.add("selected");
+      el.addEventListener("click", () => { currentColor = c; updateSelectedPen(); });
+      colorRack.appendChild(el);
+    });
+    const customs = loadCustomColors();
+    const unique = customs.filter(c => !quick.some(q => q.toLowerCase() === c.toLowerCase()));
+    if(unique.length){
+      const s2 = document.createElement("span");
+      s2.style.cssText = "width:1px;height:20px;background:rgba(255,255,255,.15);flex:none;margin:0 2px;";
+      colorRack.appendChild(s2);
+      unique.forEach(c => {
+        const el = document.createElement("span");
+        el.className = "pen"; el.style.background = c;
+        el.style.width="16px"; el.style.height="16px"; el.title = "مخصص: "+c; el.dataset.color = c;
+        if(String(c).toLowerCase() === String(currentColor).toLowerCase()) el.classList.add("selected");
+        el.addEventListener("click", () => { currentColor = c; updateSelectedPen(); });
+        colorRack.appendChild(el);
+      });
+    }
+  }
+  function updateSelectedPen(){
+    const pw = colorRack.querySelector('.color-picker-btn');
+    if(pw){ pw.style.color = currentColor; const i = pw.querySelector('input'); if(i) i.value = currentColor; }
+    colorRack.querySelectorAll('.pen').forEach(p => {
+      const c = p.dataset.color||'';
+      p.classList.toggle('selected', String(c).toLowerCase() === String(currentColor).toLowerCase());
+    });
+  }
+  function refreshCustomColors(){ buildColorRack(); }
+
+  function selectTool(tool){
+    if(currentTool !== tool) deselectAnnotation();
+    currentTool = tool;
+    document.querySelectorAll("[data-tool]").forEach(b => b.classList.toggle("active", b.dataset.tool === tool));
+    const normalInkTools = ["pen","line","arrow","rect","circle","polygon","cloud","callout","text"];
+    if(currentTool === "highlighter"){
+      if(currentWidth < 14){ currentWidth = 20; widthRange.value = 20; }
+      if(!HI_COLORS.includes(currentColor)) currentColor = HI_COLORS[0];
+    }
+    if(normalInkTools.includes(currentTool)){
+      if(currentWidth > 14){ currentWidth = 4; widthRange.value = 4; }
+      if(HI_COLORS.includes(currentColor)) currentColor = PEN_COLORS[0];
+    }
+    if(currentTool === "eraser" && currentWidth < 12){ currentWidth = 20; widthRange.value = 20; }
+    if(currentTool === "underline"){ currentColor = "#1B2430"; currentWidth = 3; widthRange.value = 3; }
+    if(currentTool === "strike"){ currentColor = "#D1495B"; currentWidth = 3; widthRange.value = 3; }
+    buildColorRack();
+    updateToolUIVisibility();
+    updateCanvasInteractivity();
+    // ملاحظة: closeTextInput هتتنادى بحذر — لو محتاجة تقفل المربع تلقائيًا
+    // (بنستخدم textInputCtx كـ flag، فلو مش مفتوح → الخروج فوري)
+    if(currentTool !== "text" && textInputCtx){
+      closeTextInput(false);
+    }
+    mainEl.style.cursor = "";
+  }
+  document.querySelectorAll("[data-tool]").forEach(btn => btn.addEventListener("click", () => selectTool(btn.dataset.tool)));
+  selectTool("select");
+
+  function updateToolUIVisibility(){
+    const showColor = ["pen","highlighter","line","arrow","rect","circle","polygon","cloud","callout","text","underline","strike"].includes(currentTool);
+    const showWidth = ["pen","highlighter","line","arrow","rect","circle","polygon","cloud","callout","underline","strike","eraser"].includes(currentTool);
+    const showHi = (currentTool === "highlighter");
+    const showFont = (currentTool === "text");
+    const showShapes = ["pen","line","arrow","rect","circle","polygon","cloud","callout"].includes(currentTool);
+    const showHiTools = ["highlighter","underline","strike"].includes(currentTool);
+    $("#hiGroup").style.display = showHiTools ? "flex" : "none";
+    $("#hiSepStart").style.display = showHiTools ? "block" : "none";
+    $("#hiSepEnd").style.display = showHiTools ? "block" : "none";
+    $("#shapesGroup").style.display = showShapes ? "flex" : "none";
+    $("#shapesSepStart").style.display = showShapes ? "block" : "none";
+    $("#shapesSepEnd").style.display = showShapes ? "block" : "none";
+    colorRack.style.display = showColor ? "flex" : "none";
+    widthRange.style.display = showWidth ? "inline-block" : "none";
+    $("#widthLabel").style.display = showWidth ? "inline" : "none";
+    $("#widthLabel").textContent = currentTool === "eraser" ? "حجم الممحاة" : "السُمك";
+    const opEl = document.getElementById("opRange");
+    const opLbl = document.getElementById("opLabel");
+    if(showHi){
+      opEl.style.display = "inline-block";
+      opLbl.style.display = "inline";
+    } else if(!selectedAnno || selectedAnno.stroke.tool !== "highlighter"){
+      opEl.style.display = "none";
+      opLbl.style.display = "none";
+    }
+    fontRange.style.display = showFont ? "inline-block" : "none";
+    $("#fontLabel").style.display = showFont ? "inline" : "none";
+  }
+
+  function updateCanvasInteractivity(){
+    const drawTools = ["pen","eraser","highlighter","line","arrow","rect","circle","polygon","cloud","callout","text"];
+    const fullTextLayer = ["underline","strike"];
+    document.body.classList.toggle("tool-draw", drawTools.includes(currentTool));
+    const inkOn = !fullTextLayer.includes(currentTool);
+    viewer.querySelectorAll("canvas.ink-canvas").forEach(c => {
+      c.style.pointerEvents = inkOn ? "auto" : "none";
+      c.style.cursor = currentTool === "select" ? "grab" :
+                       currentTool === "eraser" ? "cell" :
+                       currentTool === "text"   ? "text" : "crosshair";
+    });
+    viewer.querySelectorAll(".textLayer").forEach(t => {
+      t.classList.toggle("selectable", fullTextLayer.includes(currentTool));
+    });
+    mainEl.classList.toggle("grab", currentTool === "select" && !!pdfDoc);
+  }
+
+  widthRange.addEventListener("input", () => { currentWidth = parseInt(widthRange.value,10); });
+  opRange.addEventListener("input", () => {
+    const v = parseInt(opRange.value, 10) / 100;
+    if(selectedAnno && selectedAnno.stroke.tool === "highlighter"){
+      selectedAnno.stroke.opacity = v;
+      drawPageStrokes(selectedAnno.page);
+      scheduleSave();
+    } else {
+      currentHiOpacity = v;
+    }
+  });
+
+  fontRange.addEventListener("input", () => {
+    currentFontSize = parseInt(fontRange.value,10);
+    if(textInputBox && textInputBox.style.display === "block"){
+      tiTextarea.style.fontSize = Math.max(12, Math.min(48, currentFontSize)) + "px";
+    }
+    if(selectedAnno && selectedAnno.stroke.tool === "text"){
+      selectedAnno.stroke.fontSize = currentFontSize;
+      selWidth.value = currentFontSize;
+      rewrapTextAnnotation(selectedAnno.stroke);
+      drawPageStrokes(selectedAnno.page);
+      updateSelBar();
+      scheduleSave();
+    }
+    if(textInputCtx && textInputCtx.editingStroke){
+      textInputCtx.editingStroke.fontSize = currentFontSize;
+      rewrapTextAnnotation(textInputCtx.editingStroke);
+      drawPageStrokes(textInputCtx.p);
+    }
+  });
+
+  $("#btnUndo").addEventListener("click", () => {
+    const p = lastActivePageWithStrokes();
+    if(!p) return;
+    const list = strokesByPage[p] || [];
+    if(!list.length) return;
+    deselectAnnotation();
+    const s = list.pop();
+    redoByPage[p] = redoByPage[p] || [];
+    redoByPage[p].push(s);
+    drawPageStrokes(p); scheduleSave();
+  });
+  $("#btnRedo").addEventListener("click", () => {
+    const p = lastActivePageWithStrokes(true);
+    if(!p) return;
+    const rl = redoByPage[p] || [];
+    if(!rl.length) return;
+    const s = rl.pop();
+    strokesByPage[p] = strokesByPage[p] || [];
+    strokesByPage[p].push(s);
+    drawPageStrokes(p); scheduleSave();
+  });
+  function lastActivePageWithStrokes(forRedo){
+    const src = forRedo ? redoByPage : strokesByPage;
+    if(activePageNum && (src[activePageNum]||[]).length) return activePageNum;
+    let found = null;
+    for(const k of Object.keys(src)){ if((src[k]||[]).length) found = parseInt(k,10); }
+    return found;
+  }
+
+  document.addEventListener("keydown", e => {
+    const tag = (e.target && e.target.tagName) || "";
+    if(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if(e.key === "Escape"){
+      helpOverlay.classList.remove("show");
+      translatePanel.classList.remove("show");
+      hideContextMenu();
+      closeTextInput(false);
+      deselectAnnotation();
+      return;
+    }
+    if(!pdfDoc){
+      if(e.key === "؟" || (e.shiftKey && e.key === "/")) helpOverlay.classList.add("show");
+      if(e.key.toLowerCase() === "f") toggleFullscreen();
+      return;
+    }
+    if(e.ctrlKey || e.metaKey){
+      const k = e.key.toLowerCase();
+      if(k === "z"){ e.preventDefault(); $("#btnUndo").click(); return; }
+      if(k === "y"){ e.preventDefault(); $("#btnRedo").click(); return; }
+      if(k === "c" && selectedRange && !selectedRange.collapsed){ return; }
+      return;
+    }
+    const key = e.key, lower = key.toLowerCase();
+    if((key === "Delete" || key === "Backspace") && selectedAnno){ e.preventDefault(); $("#selDelete").click(); return; }
+    if(key === "1" || lower === "s") selectTool("select");
+    else if(key === "2" || lower === "p") selectTool("pen");
+    else if(key === "3" || lower === "h") selectTool("highlighter");
+    else if(key === "4" || lower === "e") selectTool("eraser");
+    else if(lower === "l") selectTool("line");
+    else if(lower === "u") selectTool("underline");
+    else if(lower === "k") selectTool("strike");
+    else if(lower === "a") selectTool("arrow");
+    else if(lower === "r") selectTool("rect");
+    else if(lower === "c") selectTool("circle");
+    else if(lower === "y") selectTool("polygon");
+    else if(lower === "o") selectTool("cloud");
+    else if(lower === "q") selectTool("callout");
+    else if(lower === "t") selectTool("text");
+    else if(lower === "g"){ translatePanel.classList.toggle("show"); if(translatePanel.classList.contains("show")) setTimeout(()=>$("#tpInput").focus(),100); }
+    else if(key === "+" || key === "=") zoomBy(1.2);
+    else if(key === "-" || key === "_") zoomBy(1/1.2);
+    else if(key === "0") setZoom(1, null);
+    else if(lower === "f") toggleFullscreen();
+    else if(key === "PageDown" || (key === " " && !e.shiftKey)){ e.preventDefault(); goToPage(currentPage()+1); }
+    else if(key === "PageUp" || (key === " " && e.shiftKey)){ e.preventDefault(); goToPage(currentPage()-1); }
+    else if(key === "Home"){ e.preventDefault(); goToPage(1); }
+    else if(key === "End"){ e.preventDefault(); goToPage(numPages); }
+    else if(key === "؟" || (e.shiftKey && key === "/")) helpOverlay.classList.toggle("show");
+  });
+
+  function setSaveStatus(t){ saveStatus.textContent = t; saveStatus.title = t; }
+  function scheduleSave(){
+    setSaveStatus("جاري الحفظ...");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, 700);
+  }
+  async function doSave(){
+    if(!currentFile) return;
+    const payload = { pages: strokesByPage, name: currentFile.name, size: currentFile.size, savedAt: Date.now() };
+    const ok = await storeSet("annot:" + currentFile.id, payload);
+    setSaveStatus(ok ? "تم الحفظ ✓" : "فشل الحفظ");
+    if(ok) await upsertRecent({ id: currentFile.id, name: currentFile.name, size: currentFile.size, savedAt: Date.now() });
+  }
+
+  function pickSaveHandle(suggestedName){
+    return new Promise((resolve) => {
+      if(typeof window.showSaveFilePicker !== "function"){ resolve(null); return; }
+      try{
+        const p = window.showSaveFilePicker({
+          suggestedName: suggestedName,
+          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }]
+        });
+        p.then(h => resolve(h)).catch(err => {
+          if(err && err.name === "AbortError") resolve("CANCELLED");
+          else { console.warn("showSaveFilePicker failed:", err); resolve(null); }
+        });
+      }catch(err){
+        console.warn("showSaveFilePicker threw:", err);
+        resolve(null);
+      }
+    });
+  }
+
+  function hexToRgb01(hex){
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex||'').trim());
+    if(!m) return [0, 0, 0];
+    const n = parseInt(m[1], 16);
+    return [((n>>16)&255)/255, ((n>>8)&255)/255, (n&255)/255];
+  }
+  function nxToPt(nx, ptW){ return (nx / NORM_W) * ptW; }
+  function nyToPt(ny, ptW, ptH){ return ptH - (ny / NORM_W) * ptW; }
+
+  function annotsArrayForPage(pdfDoc, page){
+    const { PDFName, PDFArray, PDFRef } = PDFLib;
+    let cur = page.node.get(PDFName.of('Annots'));
+    let arr = null;
+    if(cur instanceof PDFRef){
+      const looked = pdfDoc.context.lookup(cur);
+      if(looked instanceof PDFArray) arr = looked;
+    } else if(cur instanceof PDFArray){
+      arr = cur;
+    }
+    if(!arr){
+      arr = pdfDoc.context.obj([]);
+      page.node.set(PDFName.of('Annots'), arr);
+    }
+    return arr;
+  }
+
+  function buildInkAnnotation(pdfDoc, stroke, ptW, ptH, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const pts = stroke.points;
+    if(!pts) return null;
+    const flat = (typeof pts[0] === 'number');
+    const n = flat ? (pts.length/2) : pts.length;
+    if(n < 2) return null;
+    const xs = [], ys = [], inkList = [];
+    for(let i=0;i<n;i++){
+      const nx = flat ? pts[i*2]   : pts[i].x;
+      const ny = flat ? pts[i*2+1] : pts[i].y;
+      const px = nxToPt(nx, ptW), py = nyToPt(ny, ptW, ptH);
+      inkList.push(px, py);
+      xs.push(px); ys.push(py);
+    }
+    const lw = Math.max(1, stroke.width || 4);
+    const pad = lw * 1.5 + 2;
+    const rect = [Math.min(...xs)-pad, Math.min(...ys)-pad, Math.max(...xs)+pad, Math.max(...ys)+pad];
+    const [r, g, b] = hexToRgb01(stroke.color || '#000000');
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of('Ink'));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj(rect));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of(stroke.tool === 'highlighter' ? 'Highlight (drawn)' : 'Ink'));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    const inner = pdfDoc.context.obj(inkList);
+    const inkArr = pdfDoc.context.obj([]);
+    inkArr.push(inner);
+    d.set(PDFName.of('InkList'), inkArr);
+    const bs = pdfDoc.context.obj({});
+    bs.set(PDFName.of('W'), PDFNumber.of(lw));
+    bs.set(PDFName.of('S'), PDFName.of('S'));
+    d.set(PDFName.of('BS'), bs);
+    if(stroke.tool === 'highlighter'){
+      d.set(PDFName.of('CA'), PDFNumber.of(stroke.opacity ?? 0.38));
+    }
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildLineAnnotation(pdfDoc, stroke, ptW, ptH, isArrow, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const x1 = nxToPt(stroke.x1, ptW), y1 = nyToPt(stroke.y1, ptW, ptH);
+    const x2 = nxToPt(stroke.x2, ptW), y2 = nyToPt(stroke.y2, ptW, ptH);
+    const lw = Math.max(1, stroke.width || 4);
+    const pad = Math.max(lw*3, 12);
+    const rect = [Math.min(x1,x2)-pad, Math.min(y1,y2)-pad, Math.max(x1,x2)+pad, Math.max(y1,y2)+pad];
+    const [r, g, b] = hexToRgb01(stroke.color || '#000000');
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of('Line'));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj(rect));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of(isArrow ? 'Arrow' : 'Line'));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    d.set(PDFName.of('L'), pdfDoc.context.obj([x1,y1,x2,y2]));
+    const bs = pdfDoc.context.obj({});
+    bs.set(PDFName.of('W'), PDFNumber.of(lw));
+    bs.set(PDFName.of('S'), PDFName.of('S'));
+    d.set(PDFName.of('BS'), bs);
+    if(isArrow){
+      const le = pdfDoc.context.obj([]);
+      le.push(PDFName.of('None'));
+      le.push(PDFName.of('OpenArrow'));
+      d.set(PDFName.of('LE'), le);
+    }
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildBoxAnnotation(pdfDoc, stroke, ptW, ptH, subtype, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const x1 = nxToPt(stroke.x1, ptW), y1 = nyToPt(stroke.y1, ptW, ptH);
+    const x2 = nxToPt(stroke.x2, ptW), y2 = nyToPt(stroke.y2, ptW, ptH);
+    const lw = Math.max(1, stroke.width || 4);
+    const pad = lw * 2;
+    const rect = [Math.min(x1,x2)-pad, Math.min(y1,y2)-pad, Math.max(x1,x2)+pad, Math.max(y1,y2)+pad];
+    const [r, g, b] = hexToRgb01(stroke.color || '#000000');
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of(subtype));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj(rect));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of(subtype));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    const bs = pdfDoc.context.obj({});
+    bs.set(PDFName.of('W'), PDFNumber.of(lw));
+    bs.set(PDFName.of('S'), PDFName.of('S'));
+    d.set(PDFName.of('BS'), bs);
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildPolygonAnnotation(pdfDoc, stroke, ptW, ptH, verts, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const lw = Math.max(1, stroke.width || 4);
+    const xs = [], ys = [], flat = [];
+    for(const [nx, ny] of verts){
+      const px = nxToPt(nx, ptW), py = nyToPt(ny, ptW, ptH);
+      xs.push(px); ys.push(py); flat.push(px, py);
+    }
+    const pad = lw * 2;
+    const rect = [Math.min(...xs)-pad, Math.min(...ys)-pad, Math.max(...xs)+pad, Math.max(...ys)+pad];
+    const [r, g, b] = hexToRgb01(stroke.color || '#000000');
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of('Polygon'));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj(rect));
+    d.set(PDFName.of('Vertices'), pdfDoc.context.obj(flat));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of('Polygon'));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    const bs = pdfDoc.context.obj({});
+    bs.set(PDFName.of('W'), PDFNumber.of(lw));
+    bs.set(PDFName.of('S'), PDFName.of('S'));
+    d.set(PDFName.of('BS'), bs);
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function polygonVertices(s){
+    const cx = (s.x1 + s.x2) / 2, cy = (s.y1 + s.y2) / 2;
+    const rx = Math.abs(s.x2 - s.x1) / 2, ry = Math.abs(s.y2 - s.y1) / 2;
+    const n = 6, v = [];
+    for(let i = 0; i < n; i++){
+      const a = -Math.PI/2 + i * 2 * Math.PI / n;
+      v.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+    }
+    return v;
+  }
+  function cloudVertices(s){
+    const cx = (s.x1 + s.x2) / 2, cy = (s.y1 + s.y2) / 2;
+    const rx = Math.abs(s.x2 - s.x1) / 2, ry = Math.abs(s.y2 - s.y1) / 2;
+    const nBumps = 12, bulge = 1.25, v = [];
+    for(let i = 0; i < nBumps; i++){
+      const a = (i / nBumps) * Math.PI * 2 - Math.PI/2;
+      v.push([cx + rx * bulge * Math.cos(a), cy + ry * bulge * Math.sin(a)]);
+    }
+    return v;
+  }
+  function calloutVertices(s){
+    const x = Math.min(s.x1, s.x2), y = Math.min(s.y1, s.y2);
+    const w = Math.abs(s.x2 - s.x1), h = Math.abs(s.y2 - s.y1);
+    const tailW = Math.min(w, h) * 0.25;
+    const tailX = x + w * 0.28;
+    return [
+      [x, y], [x + w, y], [x + w, y + h],
+      [tailX + tailW * 0.35, y + h],
+      [tailX, y + h + tailW],
+      [tailX - tailW * 0.35, y + h],
+      [x, y + h]
+    ];
+  }
+
+  function buildHighlightAnnotation(pdfDoc, anno, ptW, ptH, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const x1 = nxToPt(anno.x, ptW);
+    const x2 = nxToPt(anno.x + anno.w, ptW);
+    const yTop = nyToPt(anno.y, ptW, ptH);
+    const yBot = nyToPt(anno.y + anno.h, ptW, ptH);
+    const minY = Math.min(yTop, yBot), maxY = Math.max(yTop, yBot);
+    const [r, g, b] = hexToRgb01(anno.color || '#FFE066');
+    const rect = [x1, minY, x2, maxY];
+    const quad = [x1, maxY, x2, maxY, x1, minY, x2, minY];
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of('Highlight'));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj(rect));
+    d.set(PDFName.of('QuadPoints'), pdfDoc.context.obj(quad));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of('Highlight'));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    d.set(PDFName.of('CA'), PDFNumber.of(anno.opacity ?? 0.42));
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildUnderlineStrikeAnnotation(pdfDoc, anno, ptW, ptH, subtype, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const x1 = nxToPt(anno.x, ptW);
+    const x2 = nxToPt(anno.x + anno.w, ptW);
+    const yTop = nyToPt(anno.y, ptW, ptH);
+    const yBot = nyToPt(anno.y + anno.h * (subtype === 'Underline' ? UNDERLINE_POS + 0.02 : 1), ptW, ptH);
+    const minY = Math.min(yTop, yBot), maxY = Math.max(yTop, yBot);
+    const [r, g, b] = hexToRgb01(anno.color || (subtype === 'StrikeOut' ? '#D1495B' : '#1B2430'));
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of(subtype));
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj([x1, minY, x2, maxY]));
+    d.set(PDFName.of('QuadPoints'), pdfDoc.context.obj([x1, maxY, x2, maxY, x1, minY, x2, minY]));
+    d.set(PDFName.of('C'), pdfDoc.context.obj([r,g,b]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of(subtype));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildFreeTextAnnotation(pdfDoc, s, ptW, ptH, pageRef){
+    const { PDFName, PDFString, PDFNumber } = PDFLib;
+    const fs = s.fontSize || 24;
+    const x = nxToPt(s.x, ptW);
+    const yTop = nyToPt(s.y, ptW, ptH);
+    const lines = String(s.text||"").split('\n');
+    let maxLen = 0;
+    for(const ln of lines) if(ln.length > maxLen) maxLen = ln.length;
+
+    let boxWNorm;
+    if(s.maxWidth && s.maxWidth > 20){
+      boxWNorm = s.maxWidth;
+    } else {
+      boxWNorm = Math.max(80, maxLen * fs * 0.62 + fs);
+    }
+    const totalH = Math.max(fs * 1.5, lines.length * fs * 1.5) + fs*0.3;
+    const boxW = (boxWNorm / NORM_W) * ptW;
+    const boxH = (totalH / NORM_W) * ptW;
+    const fsPt = fs * (ptW / NORM_W);
+    const [r, g, b] = hexToRgb01(s.color || '#000000');
+    const d = pdfDoc.context.obj({});
+    d.set(PDFName.of('Type'), PDFName.of('Annot'));
+    d.set(PDFName.of('Subtype'), PDFName.of('FreeText'));
+    const dir = s.dir || (isArabicText(s.text) ? "rtl" : "ltr");
+    const rectX1 = (dir === "rtl") ? (x - boxW) : x;
+    const rectX2 = (dir === "rtl") ? x : (x + boxW);
+    d.set(PDFName.of('Rect'), pdfDoc.context.obj([rectX1, yTop - boxH, rectX2, yTop]));
+    d.set(PDFName.of('F'), PDFNumber.of(4));
+    d.set(PDFName.of('Contents'), PDFString.of(s.text || ''));
+    d.set(PDFName.of('T'), PDFString.of(PDF_ANNOT_PRODUCER));
+    d.set(PDFName.of('NM'), PDFString.of('pdfqalam-' + Math.random().toString(36).slice(2)));
+    const daStr = '/Helv ' + fsPt.toFixed(2) + ' Tf ' + r.toFixed(3) + ' ' + g.toFixed(3) + ' ' + b.toFixed(3) + ' rg';
+    d.set(PDFName.of('DA'), PDFString.of(daStr));
+    d.set(PDFName.of('Q'), PDFNumber.of(dir === "rtl" ? 2 : 0));
+    const bs = pdfDoc.context.obj({});
+    bs.set(PDFName.of('W'), PDFNumber.of(0));
+    bs.set(PDFName.of('S'), PDFName.of('S'));
+    d.set(PDFName.of('BS'), bs);
+    if(pageRef) d.set(PDFName.of('P'), pageRef);
+    return d;
+  }
+
+  function buildAnnotationForStroke(pdfDoc, s, ptW, ptH, pageRef){
+    switch(s.tool){
+      case 'pen':
+      case 'highlighter':
+        return buildInkAnnotation(pdfDoc, s, ptW, ptH, pageRef);
+      case 'line':
+        return buildLineAnnotation(pdfDoc, s, ptW, ptH, false, pageRef);
+      case 'arrow':
+        return buildLineAnnotation(pdfDoc, s, ptW, ptH, true, pageRef);
+      case 'rect':
+        return buildBoxAnnotation(pdfDoc, s, ptW, ptH, 'Square', pageRef);
+      case 'circle':
+        return buildBoxAnnotation(pdfDoc, s, ptW, ptH, 'Circle', pageRef);
+      case 'polygon':
+        return buildPolygonAnnotation(pdfDoc, s, ptW, ptH, polygonVertices(s), pageRef);
+      case 'cloud':
+        return buildPolygonAnnotation(pdfDoc, s, ptW, ptH, cloudVertices(s), pageRef);
+      case 'callout':
+        return buildPolygonAnnotation(pdfDoc, s, ptW, ptH, calloutVertices(s), pageRef);
+      case 'text-highlight':
+        return buildHighlightAnnotation(pdfDoc, s, ptW, ptH, pageRef);
+      case 'text-underline':
+        return buildUnderlineStrikeAnnotation(pdfDoc, s, ptW, ptH, 'Underline', pageRef);
+      case 'text-strike':
+        return buildUnderlineStrikeAnnotation(pdfDoc, s, ptW, ptH, 'StrikeOut', pageRef);
+      case 'text':
+        if(isArabicText(s.text)) return null;
+        return buildFreeTextAnnotation(pdfDoc, s, ptW, ptH, pageRef);
+    }
+    return null;
+  }
+
+  async function bakeStrokesAsImage(outDoc, page, strokes, ptW, ptH){
+    const exportScale = 3;
+    const MAX_DIM = 4200;
+    let cw = Math.round(ptW * exportScale);
+    let ch = Math.round(ptH * exportScale);
+    if(cw > MAX_DIM || ch > MAX_DIM){
+      const r = Math.min(MAX_DIM/cw, MAX_DIM/ch);
+      cw = Math.max(1, Math.round(cw*r));
+      ch = Math.max(1, Math.round(ch*r));
+    }
+    const off = document.createElement('canvas');
+    off.width = cw; off.height = ch;
+    const ctx = off.getContext('2d');
+    ctx.clearRect(0, 0, cw, ch);
+    const scale = cw / NORM_W;
+    for(const s of strokes) drawAnnotation(ctx, s, scale);
+    const pngDataUrl = off.toDataURL('image/png');
+    const pngBytes = await (await fetch(pngDataUrl)).arrayBuffer();
+    const pngImage = await outDoc.embedPng(pngBytes);
+    page.drawImage(pngImage, { x: 0, y: 0, width: ptW, height: ptH });
+  }
+
+  btnExport.addEventListener("click", () => exportPdf());
+  async function exportPdf(opts){
+    opts = opts || {};
+    const silent = !!opts.silent;
+    if(!pdfBytes || !currentFile){
+      if(!silent) toast("لا يوجد ملف مفتوح");
+      return false;
+    }
+    showLoading(silent ? "جاري حفظ نسخة احتياطية..." : "جاري إنشاء ملف PDF...");
+    try{
+      const { PDFDocument, PDFName } = PDFLib;
+      const baseBytes = originalPdfBytes || pdfBytes;
+      const outDoc = await PDFDocument.load(baseBytes.slice(0), { ignoreEncryption: true });
+
+      try{
+        const tr = outDoc.context.trailerInfo;
+        if(tr && tr.Encrypt) delete tr.Encrypt;
+        if(tr && tr.Perms)   delete tr.Perms;
+        try{ outDoc.catalog.delete(PDFName.of('Perms')); }catch(_){}
+      }catch(e){ console.warn('strip encrypt:', e); }
+
+      const pages = outDoc.getPages();
+      const pageCount = Math.min(pages.length, numPages);
+
+      for(let i = 0; i < pageCount; i++){
+        const pnum = i + 1;
+        const list = strokesByPage[pnum] || [];
+        if(!list.length) continue;
+        const page = pages[i];
+        const sz = page.getSize();
+        const ptW = sz.width, ptH = sz.height;
+        const pageRef = page.ref || null;
+        const annotsArr = annotsArrayForPage(outDoc, page);
+
+        const toBake = [];
+        for(const s of list){
+          let dict = null;
+          try{ dict = buildAnnotationForStroke(outDoc, s, ptW, ptH, pageRef); }
+          catch(e){ console.warn('annot build failed:', s.tool, e); }
+          if(dict){
+            try{
+              const ref = outDoc.context.register(dict);
+              annotsArr.push(ref);
+            }catch(e){ console.warn('add annot failed:', e); toBake.push(s); }
+          } else {
+            toBake.push(s);
+          }
+        }
+        if(toBake.length){
+          try{ await bakeStrokesAsImage(outDoc, page, toBake, ptW, ptH); }
+          catch(e){ console.warn('bake failed:', e); }
+        }
+      }
+
+      try{
+        const jsonBytes = new TextEncoder().encode(JSON.stringify(strokesByPage));
+        await outDoc.attach(jsonBytes, ANN_JSON_NAME, {
+          mimeType: 'application/json',
+          description: 'PDF Qalam editable annotation data'
+        });
+        const origBytes = new Uint8Array(baseBytes.slice(0));
+        await outDoc.attach(origBytes, ANN_ORIG_NAME, {
+          mimeType: 'application/pdf',
+          description: 'PDF Qalam clean original PDF'
+        });
+      }catch(e){ console.warn('attach failed:', e); }
+
+      const outBytes = await outDoc.save({ useObjectStreams: false });
+      if(!outBytes || outBytes.length < 200) throw new Error("PDF output looks empty");
+
+      const rawBase = (currentFile.name || "document").replace(/\.pdf$/i, "");
+      const safeBase = (rawBase.replace(/[\\/:*?"<>|]+/g, "_").trim() || "document").slice(0, 80);
+      const outName = safeBase + (silent ? "-backup.pdf" : "-annotated.pdf");
+
+      if(opts.saveAsHandle){
+        try{
+          const writable = await opts.saveAsHandle.createWritable();
+          await writable.write(outBytes);
+          await writable.close();
+          if(!silent) toast("تم حفظ الملف ✓ — يقدر يتعدّل في Adobe Acrobat");
+          return true;
+        }catch(err){
+          console.error("save handle write failed:", err);
+          if(!silent) toast("تعذّر الحفظ في المكان المختار");
+          return false;
+        }
+      }
+
+      const blob = new Blob([outBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = outName;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => { try{ URL.revokeObjectURL(url); }catch(_){} }, 5000);
+      if(!silent) toast("تم تنزيل الملف ✓ — يقدر يتعدّل في Adobe Acrobat");
+      return true;
+    }catch(err){
+      console.error("export failed:", err);
+      if(!silent) toast("حدث خطأ أثناء التصدير");
+      return false;
+    } finally { hideLoading(); }
+  }
+
+  btnClearAll.addEventListener("click", async () => {
+    if(!pdfDoc) return;
+    const hasAny = Object.keys(strokesByPage).some(p => (strokesByPage[p]||[]).length);
+    if(!hasAny){ toast("مفيش تعديلات لحذفها"); return; }
+    const ok = confirm(
+      "⚠️ هتتمسح كل التعديلات (الرسم/التظليل/التسطير/الكتابة) في هذا الملف نهائيًا.\n\n" +
+      "✓ سيتم أولاً حفظ نسخة PDF بالتعديلات الحالية كنسخة احتياطية.\n\n" +
+      "هل تريد المتابعة؟"
+    );
+    if(!ok) return;
+
+    const rawBase = (currentFile && currentFile.name ? currentFile.name : "document").replace(/\.pdf$/i, "");
+    const safeBase = (rawBase.replace(/[\\/:*?"<>|]+/g, "_").trim() || "document").slice(0, 80);
+    const saveHandle = await pickSaveHandle(safeBase + "-backup.pdf");
+    if(saveHandle === "CANCELLED"){
+      toast("تم إلغاء العملية — لم تختر مكان حفظ النسخة الاحتياطية");
+      setSaveStatus("جاهز");
+      return;
+    }
+
+    closeTextInput(false);
+    deselectAnnotation();
+    annoDragState = null; panState = null;
+    drawing = false; activeStroke = null;
+
+    setSaveStatus("جاري حفظ نسخة احتياطية...");
+    const backupOk = await exportPdf({ silent: true, saveAsHandle: saveHandle });
+    if(!backupOk){
+      toast("⚠️ تعذّر حفظ النسخة الاحتياطية — تم إلغاء الحذف");
+      setSaveStatus("فشل الحفظ");
+      return;
+    }
+
+    strokesByPage = {};
+    redoByPage = {};
+    for(let p = 1; p <= pdfDoc.numPages; p++) drawPageStrokes(p);
+    scheduleSave();
+    toast("✅ تم حفظ النسخة الاحتياطية وحذف كل التعديلات");
+  });
+
+  async function autoLoadFromUrl(url){
+    showLoading("جاري تحميل الملف...");
+    try{
+      const res = await fetch(url);
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const blob = await res.blob();
+      const name = decodeURIComponent(url.split("/").pop().split("?")[0]) || "document.pdf";
+      const file = new File([blob], name, { type: "application/pdf" });
+      await loadFile(file, null);
+    }catch(e){ console.error(e); hideLoading(); toast("تعذّر تحميل الملف"); }
+  }
+  function showQuickResume(item){
+    const box = document.getElementById("quickResume");
+    box.innerHTML = '<button class="tbtn primary" id="quickResumeBtn" style="margin-bottom:16px;padding:12px 20px;font-size:14px;border-radius:10px;">▶ &nbsp;فتح آخر ملف: '+escapeHtml(item.name)+'</button>';
+    box.style.display = "block";
+    document.getElementById("quickResumeBtn").addEventListener("click", () => openRecent(item));
+  }
+  async function tryAutoResume(){
+    const list = await getRecentList();
+    if(!list.length) return;
+    const last = list[0];
+    const handle = await idbGetHandle(last.id);
+    if(!handle) return;
+    try{
+      const perm = await handle.queryPermission({ mode: "read" });
+      if(perm === "granted"){ const f = await handle.getFile(); await loadFile(f, handle); return; }
+    }catch(e){}
+    showQuickResume(last);
+  }
+
+  (async function init(){
+    await renderRecentList();
+    if(PDF_URL){ await autoLoadFromUrl(PDF_URL); }
+    else if(VIA_POST){
+      waitingForParent.classList.add("show");
+      setTimeout(announceReady, 100);
+      setTimeout(announceReady, 500);
+      // ★ نكرر الإعلان لحد ما الملف يوصل (الملف الكبير / النت البطيء) بدل ما نسيب الشاشة الفاضية
+      let announceTries = 0;
+      const announceTimer = setInterval(() => {
+        if(pdfDoc || ++announceTries > 120){ clearInterval(announceTimer); return; }
+        announceReady();
+      }, 1000);
+      setTimeout(() => {
+        if(pdfDoc) return;
+        const hint = document.getElementById("waitingHint");
+        if(hint) hint.style.display = "block";
+      }, 8000);
+      setTimeout(() => { if(!pdfDoc) waitingForParent.classList.remove("show"); }, 240000);
+    } else {
+      await tryAutoResume();
+    }
+    window.addEventListener("resize", () => {
+      if(!pdfDoc) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { renderAllPages(true).then(updateSelBar); updateNavBar(); }, 200);
+    });
+  })();
+
+})();
+</script>
+<script>
+/* ===== دعم العربي / English ===== */
+(function(){
+  const D = {
+    "آخر الملفات":"Recent files","أو اضغط للاختيار من جهازك":"or click to choose from your device","إضافة":"Add","إضافة كتعليق":"Add as comment","إلغاء":"Cancel",
+    "ابحث في جوجل":"Search Google","ابحث في يوتيوب":"Search YouTube","اسأل الذكاء الاصطناعي":"Ask AI","اسحب ملف PDF هنا":"Drag a PDF file here","افتح بره":"Open outside",
+    "الترجمة ستظهر هنا…":"Translation will appear here…","السُمك":"Thickness","الصفحة":"Page","العربية":"Arabic","اللون":"Color","انقر مرتين":"Double-click","بعد إضافة النص":"After adding text",
+    "تحديد":"Select","تحديد / سحب":"Select / Drag","ترجع تلقائيًا لأداة التحديد":"returns to the Select tool automatically","ترجم الآن":"Translate now","ترجمة":"Translate",
+    "ترجمة عربي ↔ إنجليزي":"Translate Arabic ↔ English","تسطير":"Underline","تظليل":"Highlight","تظليل حر":"Free highlight","تعديل":"Edit","تلقائي":"Auto","تنزيل PDF":"Download PDF",
+    "حجم":"Size","حذف الكل":"Delete all","خط":"Line","دائرة":"Circle","سحابة":"Cloud","سهم":"Arrow","شطب":"Strikethrough","شفافية":"Opacity","صفحة 1":"Page 1","عرض النص":"Show text",
+    "على نص لتعديله":"on text to edit it","فتح ملف":"Open file","فقاعة":"Bubble","قلم":"Pen","قلم PDF":"PDF Qalam","كشف تلقائي":"Auto-detect","لحذف الرسمة المحددة":"to delete the selected drawing",
+    "مستطيل":"Rectangle","مسح":"Clear","مضلع":"Polygon","ملء الشاشة":"Fullscreen","ملاءمة":"Fit","ممحاة":"Eraser","نسخ النص":"Copy text","نص":"Text",
+    "يفتح فقط (النص منسوخ)":"Opens only (text copied)","ينسخ ويلصق":"Copies & pastes",
+    ": استخدم السلايدر في نافذة الإدخال للتحكم يدويًا":": use the slider in the input window to adjust manually",
+    ": اضغط على رسمة لتغيير لونها/سُمكها أو تحريكها":": click a drawing to change its color/thickness or move it",
+    "↩️ تراجع / ↪️ إعادة":"↩️ Undo / ↪️ Redo","⌨️ اختصارات":"⌨️ Shortcuts","⏳ بانتظار الملف...":"⏳ Waiting for a file...","⏳ جاري تحميل الملف...":"⏳ Loading the file...","الملف كبير أو النت بطيء — لسه بيتحمّل...":"The file is large or the connection is slow — still loading...","▁ تسطير / ╳ شطب":"▁ Underline / ╳ Strike",
+    "▭ مستطيل / ◯ دائرة":"▭ Rectangle / ◯ Circle","✏️ قلم":"✏️ Pen","➡️ سهم":"➡️ Arrow","⬡ مضلع / ☁️ سحابة / 💬 فقاعة":"⬡ Polygon / ☁️ Cloud / 💬 Bubble","🅰️ نص جديد":"🅰️ New text",
+    "🌐 الترجمة":"🌐 Translation","🌐 ترجمة":"🌐 Translate","📄 إدراج في الملف":"📄 Insert into file","📄 تنقل":"📄 Navigation","📋 نسخ":"📋 Copy","📏 خط":"📏 Line","🔍 زوم":"🔍 Zoom",
+    "🔲 تحديد / سحب / تعديل":"🔲 Select / Drag / Edit","🖍️ تظليل حر":"🖍️ Free highlight","🖥️ ملء الشاشة":"🖥️ Fullscreen","🖱️ بالماوس:":"🖱️ With mouse:","🗑️ حذف":"🗑️ Delete",
+    "🗑️ حذف المحدد":"🗑️ Delete selected","🧹 ممحاة (نقطة نقطة)":"🧹 Eraser (point by point)",
+    "إعادة":"Redo","تراجع":"Undo","حذف":"Delete","كتابة نص":"Write text","فتح في تبويب جديد":"Open in new tab","اسحب للتنقل في الملف":"Drag to navigate the file",
+    "اكتب أو الصق النص هنا…":"Type or paste text here…","اكتب هنا… (عربي / English)":"Type here… (Arabic / English)","عرض تلقائي حسب المساحة":"Auto width to fit space",
+    "حذف كل التعديلات (مع حفظ نسخة احتياطية أولاً)":"Delete all edits (a backup is saved first)",
+    /* رسائل */
+    "تم":"Done","تم الحفظ ✓":"Saved ✓","تم التظليل ✓":"Highlighted ✓","تم التسطير ✓":"Underlined ✓","تم الشطب ✓":"Struck through ✓","تم النسخ ✓":"Copied ✓","تم نسخ النص ✓":"Text copied ✓",
+    "تعذّر النسخ":"Copy failed","تم إرسال النص للشات ✓ (ومنسوخ احتياطياً)":"Text sent to chat ✓ (also copied as backup)","تم نسخ النص ✓ — تقدر تلصقه في الشات (Ctrl+V)":"Text copied ✓ — paste it in the chat (Ctrl+V)",
+    "جاري التحميل...":"Loading...","جاري الحفظ...":"Saving...","جاري فتح الملف...":"Opening file...","جاري تحميل الملف...":"Loading file...","جاري إنشاء ملف PDF...":"Creating PDF...",
+    "جاري حفظ نسخة احتياطية...":"Saving a backup...","جاهز":"Ready","جاهز — التعديلات مسترجعة":"Ready — edits restored","تم حذف العنصر ✓":"Item deleted ✓","تم حذف النص":"Text deleted",
+    "تم تحديث النص ✓":"Text updated ✓","تمت إضافة النص — يمكنك سحبه الآن":"Text added — you can drag it now","تم تحميل تعليقاتك السابقة":"Your previous annotations were loaded",
+    "لا يوجد ملف مفتوح":"No file is open","مفيش ملف مفتوح":"No file is open","مفيش ملف مفتوح حاليًا":"No file is open right now","لا يوجد نص":"No text","مفيش تعديلات لحذفها":"No edits to delete",
+    "الملف ده مش فيه تعديلات":"This file has no edits","الملف ده مش فيه تعديلات محفوظة":"This file has no saved edits","من فضلك اسحب ملف PDF فقط":"Please drop a PDF file only","هذا الملف ليس PDF":"This file is not a PDF",
+    "تعذّر تحميل الملف":"Could not load the file","تعذّر فتح الملف":"Could not open the file","تعذّر قراءة الملف":"Could not read the file","تعذّر الحفظ في المكان المختار":"Could not save in the chosen location",
+    "فشل الحفظ":"Save failed","حدث خطأ أثناء التصدير":"An error occurred during export","⚠️ تعذّرت الترجمة":"⚠️ Translation failed","تعذّر الاتصال":"Connection failed",
+    "تم تنزيل الملف ✓ — يقدر يتعدّل في Adobe Acrobat":"File downloaded ✓ — editable in Adobe Acrobat","تم حفظ الملف ✓ — يقدر يتعدّل في Adobe Acrobat":"File saved ✓ — editable in Adobe Acrobat",
+    "اضغط على المكان في الصفحة":"Click a spot on the page","حجم الممحاة":"Eraser size","🎨 منتقي الألوان":"🎨 Color picker","الحجم":"Size","الشفافية":"Opacity","النص":"Text","تحديث":"Update","وحدة":"unit"
+  };
+  const AI_PROMPT = {ar:"اشرح لي هذا النص:", en:"Explain this text:"};
+  let lang = "ar";
+  try{ lang = localStorage.getItem("pdfqalam:lang") || "ar"; }catch(e){}
+  window.__lang = lang;
+  const tr = k => { const t = String(k).trim(); return D[t] ? String(k).replace(t, D[t]) : k; };
+  window.trEn = m => (window.__lang === "en" ? tr(m) : m);
+  window.aiPromptText = () => AI_PROMPT[window.__lang] || AI_PROMPT.ar;
+
+  const orig = new WeakMap();
+  const ATTRS = ["title","placeholder","aria-label"];
+  function trAttr(v){
+    const m = String(v).match(/^(.*?)(\s*\([^)]*\))?$/);
+    const base = m[1].trim();
+    return D[base] ? D[base] + (m[2]||"") : v;
+  }
+  function walk(root){
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; while(w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(n => {
+      if(lang === "en"){
+        if(!/[\u0600-\u06FF]/.test(n.nodeValue)) return;
+        const t = tr(n.nodeValue);
+        if(t !== n.nodeValue){ if(!orig.has(n)) orig.set(n, n.nodeValue); n.nodeValue = t; }
+      } else if(orig.has(n)){ n.nodeValue = orig.get(n); orig.delete(n); }
+    });
+    const els = root.querySelectorAll ? root.querySelectorAll("[title],[placeholder],[aria-label]") : [];
+    els.forEach(el => ATTRS.forEach(a => {
+      if(!el.hasAttribute(a)) return;
+      const k = "ar" + a.replace(/-/g,"");
+      if(lang === "en"){
+        const v = el.getAttribute(a);
+        if(/[\u0600-\u06FF]/.test(v)){ const t = trAttr(v); if(t !== v){ if(!el.dataset[k]) el.dataset[k] = v; el.setAttribute(a, t); } }
+      } else if(el.dataset[k]){ el.setAttribute(a, el.dataset[k]); delete el.dataset[k]; }
+    }));
+  }
+  let busy = false;
+  function apply(){ busy = true; walk(document.body); busy = false;
+    document.documentElement.lang = lang; btn.textContent = lang === "en" ? "ع" : "EN";
+    btn.title = lang === "en" ? "التبديل إلى العربية" : "Switch to English"; }
+  const btn = document.createElement("button");
+  btn.id = "langToggle";
+  btn.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:350;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:#1B2430;color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);";
+  btn.addEventListener("click", () => {
+    lang = lang === "en" ? "ar" : "en"; window.__lang = lang;
+    try{ localStorage.setItem("pdfqalam:lang", lang); }catch(e){}
+    apply();
+  });
+  document.body.appendChild(btn);
+  apply();
+  new MutationObserver(ms => {
+    if(busy || lang !== "en") return;
+    busy = true;
+    ms.forEach(m => m.addedNodes.forEach(n => { if(n.nodeType === 1) walk(n); else if(n.nodeType === 3 && n.parentNode){ walk(n.parentNode); } }));
+    busy = false;
+  }).observe(document.body, {childList:true, subtree:true});
+})();
+
+  // ===== مؤشر تمرير الشريط العلوي =====
+  (function(){
+    const bar=document.getElementById('topbar'), wrap=document.getElementById('topbarWrap'),
+          track=document.getElementById('topbarScroll'), thumb=document.getElementById('topbarScrollThumb'),
+          fl=wrap.querySelector('.tbFade.l'), fr=wrap.querySelector('.tbFade.r');
+    function update(){
+      const max=bar.scrollWidth-bar.clientWidth;
+      const has=max>2;
+      track.classList.toggle('show',has);
+      wrap.classList.toggle('has-scroll',has);
+      if(!has) return;
+      const w=Math.max(18,bar.clientWidth/bar.scrollWidth*100);
+      const pos=Math.min(1,Math.max(0,Math.abs(bar.scrollLeft)/max)); // 0 = بداية (يمين في RTL)
+      thumb.style.width=w+'%';
+      thumb.style.right=(pos*(100-w))+'%';
+      fr.style.opacity=pos>0.02?1:0;   // في RTL: اليمين = البداية
+      fl.style.opacity=pos<0.98?1:0;
+    }
+    bar.addEventListener('scroll',update,{passive:true});
+    window.addEventListener('resize',update);
+    window.addEventListener('load',()=>{update(); if(track.classList.contains('show')){track.classList.add('hint');setTimeout(()=>track.classList.remove('hint'),2400);}});
+    if(window.ResizeObserver) new ResizeObserver(update).observe(bar);
+    new MutationObserver(update).observe(bar,{subtree:true,attributes:true,attributeFilter:['style','class']});
+    update();
+  })();
+</script>
+</body>
+</html>

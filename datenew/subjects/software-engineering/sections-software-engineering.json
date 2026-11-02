@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "subject": "software-engineering",
+  "sections": [
+    {
+      "id": "software-engineeringe-sec-01",
+      "subject": "software-engineering",
+      "lecture": "المحاضرة الأولى",
+      "lectureId": "software-engineering-lec-01",
+      "instructorId": "INS-GEHAD",
+      "instructorName": "م. جهاد ",
+      "groupName": "سكشن A",
+      "status": "available",
+      "sectionTitle": "🧩 سكاشن هندسة البرمجيات ",
+      "materials": {
+        "file": {
+          "label": "ملف السكشن ",
+          "notes": "الاسئلة ال علينا هم 1,2,3,5,6,10",
+          "url": "datenew/subjects/software-engineering/sections/Chapter_1_Introduction_to_Software_Engineering_—_Exercises_Explained_compressed.pdf",
+          "type": "pdf"
+        }
+      },
+      "task": {
+        "notes": "تحديد المشروع و افراد التيم شروط التيم من 2 لي 6"
+      }
+    },
+    {
+      "id": "software-engineeringe-sec-sec-02",
+      "subject": "software-engineering",
+      "lecture": "المحاضرة الثانية - عمليات البرمجيات",
+      "lectureId": "software-engineering-lec-02",
+      "instructorId": "INS-GEHAD",
+      "instructorName": "م. جهاد ",
+      "groupName": "سكشن A",
+      "status": "available",
+      "sectionTitle": "🧩 سكاشن عمليات البرمجيات",
+      "task": {
+        "title": "task",
+        "url": "datenew/subjects/software-engineering/sections/Problem Analysis & Project Planning.pdf",
+        "type": "pdf",
+
+        "notes": "حاول متستخدمش ai بحيث يكتبلك كل شي وانت مش فاهم حاجة ."
+      },
+      "extraFiles": [
+        {
+          "label": " ملف  المهمة ورد لي سهوله التعديل .",
+          "url": "https://docs.google.com/document/d/1iFKq2MuHnhV9gU4r5YXnhvcbjPnXaeDW/edit?usp=sharing&ouid=106592439058681219179&rtpof=true&sd=true",
+          "type": "download"
+        }
+      ]
+    }
+  ]
+}

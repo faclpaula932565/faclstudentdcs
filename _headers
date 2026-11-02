@@ -1,0 +1,44 @@
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://*.clarity.ms https://www.clarity.ms https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: blob: data:; frame-src 'self' https:; worker-src 'self' blob: https://cdnjs.cloudflare.com; child-src 'self' blob: https:; media-src 'self' blob: https:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+
+# صفحات HTML: دايمًا تتأكد من السيرفر (عشان نسخة قديمة ما تتخدمش بعد الـ deploy)
+/
+  Cache-Control: public, max-age=0, must-revalidate, no-cache
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate, no-cache
+
+/pdf-annotator
+  Cache-Control: public, max-age=0, must-revalidate, no-cache
+
+/app.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/pwa.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Service-Worker-Allowed: /
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600
+  Content-Type: application/manifest+json
+
+/icons/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
